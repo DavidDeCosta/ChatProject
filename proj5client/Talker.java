@@ -20,12 +20,14 @@ class Talker
           System.out.println("Message sent to server: " + message);
         }
       
-        void receiveMessage() throws IOException 
+        String receiveMessage() throws IOException 
         {
             String message;
   //          System.out.println("Ready to receive message.......");
             message = instream.readLine();                                    // read message from server
-            System.out.println(message);     
+            System.out.println(message); 
+            return message;
+               
         }
       
 }

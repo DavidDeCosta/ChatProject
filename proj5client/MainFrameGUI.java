@@ -34,6 +34,7 @@ class MainFrameGUI extends JFrame
     JButton logIn;
     JButton submit;
     JButton cancel;
+    JButton addFriend;
 
     JComponent panel;
     GroupLayout groupLayout;
@@ -45,6 +46,11 @@ class MainFrameGUI extends JFrame
     JPanel panel4;
     boolean isLoginOption = false;
     Properties properties;
+
+    JList<String> displayList;                           // displays their names
+    JScrollPane tripScrollPane;
+    MyListModel justAListModel;
+
 
     MainFrameGUI()
     {
@@ -156,6 +162,11 @@ class MainFrameGUI extends JFrame
 
     void setupComponents()
     {
+        justAListModel = new MyListModel();
+        displayList = new JList<String>(justAListModel);
+        tripScrollPane = new JScrollPane(displayList);
+        add(tripScrollPane, BorderLayout.EAST);
+
         panel1 = new JPanel();
         add(panel1, BorderLayout.NORTH);
 
@@ -171,6 +182,9 @@ class MainFrameGUI extends JFrame
         register = new JButton("Register");
         register.addActionListener(this);
 
+        addFriend = new JButton("Add Friend");
+        addFriend.addActionListener(this);
+
         logIn = new JButton("Login");
         logIn.addActionListener(this);
         panel2 = new JPanel();
@@ -178,6 +192,7 @@ class MainFrameGUI extends JFrame
 
         panel2.add(register);
         panel2.add(logIn);
+        panel2.add(addFriend);
 
     }
 
@@ -194,7 +209,7 @@ class MainFrameGUI extends JFrame
         {
             socket = new Socket(ip,portNumber);                               // pass in ip and port #
             talker = new Talker(socket);                                      // used to send and receive messages from the server
-            connectionToServer = new ConnectionToServer(socket, message);      // used to create a new thread for each client
+            connectionToServer = new ConnectionToServer(socket, message, userID,this);      // used to create a new thread for each client
         } 
         catch (IOException ex) 
         {
@@ -202,13 +217,22 @@ class MainFrameGUI extends JFrame
             JOptionPane.showMessageDialog(null, "Failed to connect", "Could Not Connect", JOptionPane.ERROR_MESSAGE);
             System.exit(0);
         }
-
+        
+        this.setTitle(userID);
         dialog.dispose();
+    }
+
+    void addFriendNameToList(String friendName)
+    {
+        justAListModel.addElement(friendName);
     }
 
     void handleSend()
     {
+
         String message = textField.getText().trim();
+        if(talker != null)
+        {                                              // if the talker object is null then do nothing
             if(message.isEmpty())                // if the message is empty then do nothing
             {
                 return;
@@ -223,6 +247,11 @@ class MainFrameGUI extends JFrame
             {
                 System.out.println("Failed to send message");
             }
+        }
+        else
+        {
+            JOptionPane.showMessageDialog(this, "You are not connected to the server", "Not Connected", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     void handleSubmit()
@@ -243,7 +272,7 @@ class MainFrameGUI extends JFrame
 
         try 
         {
-            FileOutputStream outputStream = new FileOutputStream("information.properties");   //create a file output stream
+            FileOutputStream outputStream = new FileOutputStream("information.txt");            //create a file output stream
             properties.store(outputStream, null);                                         //store the properties object in the file
             outputStream.close();
         } 
@@ -252,17 +281,14 @@ class MainFrameGUI extends JFrame
         e.printStackTrace();
         }
 
-
         int portnum;
         portnum = Integer.parseInt(portNumber);
-   
-        
 
         try 
         {
             socket = new Socket(ip,portnum);                                            // pass in ip and port #
             talker = new Talker(socket);                                                // used to send and receive messages from the server
-            connectionToServer = new ConnectionToServer(socket, message);      // used to create a new thread for each client
+            connectionToServer = new ConnectionToServer(socket, message, username,this);      // used to create a new thread for each client
         } 
         catch (IOException ex) 
         {
@@ -286,11 +312,28 @@ class MainFrameGUI extends JFrame
         dialogSetup(false);
     }
 
+    void handleAddFriend()
+    {
+        String friendName = JOptionPane.showInputDialog(this, "Enter the name of the friend you want to add", "Add Friend", JOptionPane.QUESTION_MESSAGE);
+        if(friendName != null)
+        {
+            String message = "addfriend " + friendName;
+            try 
+            {
+                talker.sendMessage(message);
+            } 
+            catch (IOException ex) 
+            {
+                System.out.println("Failed to send message");
+            }
+        }
+    }
+
     Properties getProperties()
     {
         Properties properties = new Properties();
 
-        try(FileInputStream inputStream = new FileInputStream("information.properties"))    //try to read from the file
+        try(FileInputStream inputStream = new FileInputStream("information.txt"))    //try to read from the file
         {
             properties.load(inputStream);                                               //load the properties object from the file
         }
@@ -332,6 +375,10 @@ class MainFrameGUI extends JFrame
         else if(e.getActionCommand().equals("Login"))
         {
             handleLogin();
+        }
+        else if(e.getActionCommand().equals("Add Friend"))
+        {
+            handleAddFriend();
         }
         
     }

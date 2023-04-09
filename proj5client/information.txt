@@ -1,0 +1,5 @@
+#Sat Apr 08 16:20:53 EDT 2023
+password=ee
+ip=127.0.0.1
+portNumber=12345
+username=emily

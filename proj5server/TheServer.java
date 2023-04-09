@@ -7,7 +7,7 @@ class TheServer
     Socket clientSocket;
     ConnectionToClient connection;
     User user;
-    MyUserList userList;
+    MyUserList userList;            // used to store the user list
 
     TheServer()
     {
@@ -48,7 +48,7 @@ class TheServer
         {
            try
            {
-                DataInputStream load = new DataInputStream(new FileInputStream("userList.ser"));     
+                DataInputStream load = new DataInputStream(new FileInputStream("userList.txt"));     
                 userList.load(load);                                 // load the user list
            }
            catch(IOException e)
@@ -62,8 +62,8 @@ class TheServer
     {
         try 
         {
-            DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.ser"));
-            userList.save(save);
+            DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.txt"));
+            userList.save(save);                                                                         
         } catch (IOException e) 
         {
             System.out.println("Error saving the user list: " + e.getMessage());
