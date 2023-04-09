@@ -40,7 +40,8 @@ class TheServer
 
     void doesHashTableExist()
     {
-        if(userList == null)                                 // if the user list is empty
+        File file = new File("userList.txt");
+        if(!file.exists())                                 // if the user list is empty
         {
             userList = new MyUserList();                     // create a new user list
         }

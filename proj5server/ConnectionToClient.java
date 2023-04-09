@@ -75,9 +75,11 @@ class ConnectionToClient implements Runnable
                     {
                     user = new User(clientID, clientPassword);
                     user.connection = this;
-                    talker = new Talker(clientSocket, user);
                     userList.put(clientID, user);
+                    talker = new Talker(clientSocket, user);
                     talker.sendMessage(" register success");
+
+                    potentialUser = user;
                     }
                 }
                 else if(command.equals("login"))
@@ -85,10 +87,19 @@ class ConnectionToClient implements Runnable
                     user = userList.get(clientID);
                     if(user != null && user.password.equals(clientPassword))
                     {
+                        if(!user.isLoggedIn())
+                        {
                         user.connection = this;
+                        userList.put(clientID, user);
                         talker = new Talker(clientSocket, user);
                         talker.sendMessage("login success");
+                        user.loggedIn = true;
                       //  System.out.println("Login success");
+                        }
+                        else
+                        {
+                            talker.sendMessage("already logged in");
+                        }
                     }
                     else
                     {
@@ -115,9 +126,9 @@ class ConnectionToClient implements Runnable
                     String potentialFriend = clientID;
                     if(response.equals("0"))
                     {
-                        user.buddylist.put(potentialFriend, userList.get(potentialFriend));  // add friend to buddylist with the key being the username and the value being the User object
+                        user.buddylist.add(potentialFriend);  // add friend to buddylist with the key being the username and the value being the User object
                         potentialUser = userList.get(potentialFriend); // get the User object of the potential friend
-                        potentialUser.buddylist.put(user.userName, user); // add the user to the potential friend's buddylist   so now both users have each other in their buddylist
+                        potentialUser.buddylist.add(user.userName); // add the user to the potential friend's buddylist   so now both users have each other in their buddylist
                         User initiatorUser = userList.get(potentialUser.initiatorUserName); // get the User object of the initiator
                         initiatorUser.connection.talker.sendMessage("addFriendSuccess " + user.userName + " " + potentialUser.initiatorUserName); // send  command to the initiator
                     }
