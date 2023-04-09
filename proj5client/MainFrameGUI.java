@@ -47,7 +47,7 @@ class MainFrameGUI extends JFrame
     boolean isLoginOption = false;
     Properties properties;
 
-    JList<String> displayList;                           // displays their names
+    JList<Friends> displayList;                           // displays their names
     JScrollPane tripScrollPane;
     MyListModel justAListModel;
 
@@ -163,7 +163,7 @@ class MainFrameGUI extends JFrame
     void setupComponents()
     {
         justAListModel = new MyListModel();
-        displayList = new JList<String>(justAListModel);
+        displayList = new JList<Friends>(justAListModel);
         tripScrollPane = new JScrollPane(displayList);
         add(tripScrollPane, BorderLayout.EAST);
 
@@ -224,7 +224,7 @@ class MainFrameGUI extends JFrame
 
     void addFriendNameToList(String friendName)
     {
-        justAListModel.addElement(friendName);
+        justAListModel.addElement(new Friends(friendName));
     }
 
     void handleSend()
