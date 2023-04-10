@@ -9,17 +9,17 @@ class Friends
         this.online = false;
     }
 
-    public String getName() 
+    String getName() 
     {
         return name;
     }
 
-    public boolean isOnline() 
+    boolean isOnline() 
     {
         return online;
     }
 
-    public void setOnline(boolean online) 
+    void setOnline(boolean online) 
     {
         this.online = online;
     }

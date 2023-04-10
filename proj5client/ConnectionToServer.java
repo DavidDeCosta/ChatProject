@@ -70,6 +70,10 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                         {
                             response = JOptionPane.showConfirmDialog(null, "Do you want to add " + senderID + " as a friend?", "Add Friend", JOptionPane.YES_NO_OPTION);
                             responseString = Integer.toString(response);
+                            if(response == 0)
+                            {
+                                mainFrameGUI.addFriendNameToList(senderID);
+                            }
                             try 
                             {
                                 talker.sendMessage("addFriendResponse " + userID + " " + responseString);

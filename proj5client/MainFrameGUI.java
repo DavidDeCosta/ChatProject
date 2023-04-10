@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.util.Properties;
 
 class MainFrameGUI extends JFrame
-                            implements ActionListener
+                            implements ActionListener, MouseListener
 {
 
     Toolkit toolkit;
@@ -164,6 +164,7 @@ class MainFrameGUI extends JFrame
     {
         justAListModel = new MyListModel();
         displayList = new JList<Friends>(justAListModel);
+        displayList.addMouseListener(this);
         tripScrollPane = new JScrollPane(displayList);
         add(tripScrollPane, BorderLayout.EAST);
 
@@ -252,6 +253,34 @@ class MainFrameGUI extends JFrame
         {
             JOptionPane.showMessageDialog(this, "You are not connected to the server", "Not Connected", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    void setupChatDialog(Friends friend)
+    {
+        JDialog chatDialog = new JDialog(this, friend.name, false);
+        chatDialog.setLayout(new BorderLayout());
+
+        JEditorPane editorPane = new JEditorPane();
+        editorPane.setEditable(false);
+        editorPane.setContentType("text/html");
+        JScrollPane chatScrollPane = new JScrollPane(editorPane);
+        chatDialog.add(chatScrollPane, BorderLayout.CENTER);
+
+        JPanel messagePanel = new JPanel();
+        chatDialog.add(messagePanel, BorderLayout.SOUTH);
+
+        JTextArea messageArea = new JTextArea(3, 30);
+        JScrollPane messageScrollPane = new JScrollPane(messageArea);
+        messagePanel.add(messageScrollPane);
+
+        JButton sendButton = new JButton("Send");
+        messagePanel.add(sendButton);
+        sendButton.addActionListener(this);
+
+        chatDialog.setSize(400, 300);
+        chatDialog.setLocationRelativeTo(null);
+        chatDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        chatDialog.setVisible(true);
     }
 
     void handleSubmit()
@@ -381,6 +410,47 @@ class MainFrameGUI extends JFrame
             handleAddFriend();
         }
         
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) 
+    {
+        if(e.getClickCount() == 2)
+        {
+            int index = displayList.locationToIndex(e.getPoint());   //get the index of the item that was clicked
+            Friends friend = (Friends)justAListModel.getElementAt(index);  //get the friend object at that index
+            String friendName = friend.getName();               //get the name of the friend
+            setupChatDialog(friend);                      //create a new chat dialog for the friend
+
+        }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) 
+    {
+        // TODO Auto-generated method stub
+        //throw new UnsupportedOperationException("Unimplemented method 'mousePressed'");
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) 
+    {
+        // TODO Auto-generated method stub
+        //throw new UnsupportedOperationException("Unimplemented method 'mouseReleased'");
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) 
+    {
+        // TODO Auto-generated method stub
+        //throw new UnsupportedOperationException("Unimplemented method 'mouseEntered'");
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) 
+    {
+        // TODO Auto-generated method stub
+       // throw new UnsupportedOperationException("Unimplemented method 'mouseExited'");
     }
     
 }
