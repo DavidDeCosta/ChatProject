@@ -20,7 +20,7 @@ public class MyUserList  extends Hashtable<String, User>
 
     void load(DataInputStream load) throws IOException 
     { 
-        clear();                                               // clear the list
+       // clear();                                               // clear the list
         int size = load.readInt();                             // read the size of the list
         for (int i = 0; i < size; i++) 
         {

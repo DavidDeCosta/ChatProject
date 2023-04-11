@@ -37,6 +37,7 @@ public class User
         store.writeInt(buddylist.size());           // Write the buddy list size
         for (String buddyUserName : buddylist)      // Write each buddy's username
         {        
+            System.out.println("IM IN HERE \n");
             store.writeUTF(buddyUserName);
         }
     }

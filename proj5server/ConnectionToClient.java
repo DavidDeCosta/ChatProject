@@ -4,7 +4,7 @@ import java.net.Socket;
 class ConnectionToClient implements Runnable 
 {
     Socket clientSocket;
-    BufferedReader instream;
+    DataInputStream instream;
     DataOutputStream outStream;
     Thread thread;
     String id;
@@ -16,6 +16,8 @@ class ConnectionToClient implements Runnable
     User user;
     User potentialUser;
     String response;
+
+   // TheServer theServer;
 
     MyUserList userList;
 
@@ -93,6 +95,13 @@ class ConnectionToClient implements Runnable
                         userList.put(clientID, user);
                         talker = new Talker(clientSocket, user);
                         talker.sendMessage("login success");
+                     //   instream = new DataInputStream(new FileInputStream("userList.txt"));
+                     //   user.load(instream);
+                        for(String buddy : user.buddylist )
+                        {
+                            System.out.println("buddy: " + buddy);
+                            talker.sendMessage("addFriendSuccess " + buddy );
+                        }
                         user.loggedIn = true;
                       //  System.out.println("Login success");
                         }
@@ -131,11 +140,21 @@ class ConnectionToClient implements Runnable
                         potentialUser.buddylist.add(user.userName); // add the user to the potential friend's buddylist   so now both users have each other in their buddylist
                         User initiatorUser = userList.get(potentialUser.initiatorUserName); // get the User object of the initiator
                         initiatorUser.connection.talker.sendMessage("addFriendSuccess " + user.userName + " " + potentialUser.initiatorUserName); // send  command to the initiator
+                        //userList.save(outStream);
+                        try 
+                        {
+                            DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.txt"));
+                            userList.save(save);                                                                         
+                        } catch (IOException e) 
+                        {
+                            System.out.println("Error saving the user list: " + e.getMessage());
+                        }
                     }
                     else
                     {
                         potentialUser = userList.get(potentialFriend); // get the User object of the potential friend
                         potentialUser.connection.talker.sendMessage("addfriend failed " + user.userName + " " + potentialFriend); // send the addfriend command to the potential friend
+
                         talker.sendMessage("addfriend failed");
                     }
                 }
