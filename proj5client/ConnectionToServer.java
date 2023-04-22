@@ -76,7 +76,8 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                             }
                             try 
                             {
-                                talker.sendMessage("addFriendResponse " + userID + " " + responseString);
+                                System.out.println("SenderID: " + senderID);
+                                talker.sendMessage("addFriendResponse " + senderID + " " + responseString);
                             } catch (IOException e) 
                             {
                                 e.printStackTrace();

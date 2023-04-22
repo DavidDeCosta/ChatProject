@@ -41,21 +41,18 @@ class TheServer
     void doesHashTableExist()
     {
         File file = new File("userList.txt");
-        if(!file.exists())                                 // if the user list is empty
+        userList = new MyUserList(); // Initialize userList in both cases
+        if(file.exists()) // If the user list file exists
         {
-            userList = new MyUserList();                     // create a new user list
-        }
-        else
-        {
-           try
-           {
+            try
+            {
                 DataInputStream load = new DataInputStream(new FileInputStream("userList.txt"));     
-                userList.load(load);                                 // load the user list
-           }
-           catch(IOException e)
-           {
-               System.out.println("Error loading the user list: " + e.getMessage());
-           }
+                userList.load(load); // Load the user list
+            }
+            catch(IOException e)
+            {
+                System.out.println("Error loading the user list: " + e.getMessage());
+            }
         }
     }
 
@@ -65,7 +62,8 @@ class TheServer
         {
             DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.txt"));
             userList.save(save);                                                                         
-        } catch (IOException e) 
+        } 
+        catch (IOException e) 
         {
             System.out.println("Error saving the user list: " + e.getMessage());
         }

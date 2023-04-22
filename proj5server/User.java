@@ -7,8 +7,8 @@ public class User
     String password;
     ConnectionToClient connection;
     Vector<String> buddylist;
-    String initiatorUserName;
     boolean loggedIn;
+    String initiatorUserName;
 
     User(String userName, String password)
     {
@@ -34,24 +34,47 @@ public class User
     {
         store.writeUTF(userName);
         store.writeUTF(password);
-        store.writeInt(buddylist.size());           // Write the buddy list size
-        for (String buddyUserName : buddylist)      // Write each buddy's username
-        {        
-            System.out.println("IM IN HERE \n");
+        store.writeInt(buddylist.size());
+        System.out.println("Storing buddy list for " + userName + ": " + buddylist);
+        for (String buddyUserName : buddylist) {
             store.writeUTF(buddyUserName);
         }
     }
 
-    void load(DataInputStream load) throws IOException 
-    {
+    void load(DataInputStream load) throws IOException {
         userName = load.readUTF();
         password = load.readUTF();
-        int buddyListSize = load.readInt();             // Read the buddy list size
-        for (int i = 0; i < buddyListSize; i++)             // Read each buddy's username
-        { 
+        int buddyListSize = load.readInt();
+        System.out.println("Loading buddy list for " + userName);
+        for (int i = 0; i < buddyListSize; i++) {
             String buddyUserName = load.readUTF();
-            buddylist.add(buddyUserName);               // Add the buddy's username to the buddy list
+            buddylist.add(buddyUserName);
+        }
+        System.out.println("Loaded buddy list for " + userName + ": " + buddylist);
+    }
+
+    void saveBuddyList(MyUserList userList) 
+    {
+        try 
+        {
+            DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.txt"));
+            userList.save(save);
+        } catch (IOException e) 
+        {
+            System.out.println("Error saving the user list: " + e.getMessage());
         }
     }
+
+
+    
+    void loadBuddyList(MyUserList userList) {
+        try (DataInputStream load = new DataInputStream(new FileInputStream("userList.txt"))) {
+            userList.load(load);
+        } catch (IOException e) {
+            System.out.println("Error loading the user list: " + e.getMessage());
+        }
+    }
+
+    
 }
 
