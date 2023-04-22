@@ -32,6 +32,7 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
         new Thread(this).start();                                        //client gets its own thread
     }
 
+
     @Override
     public void run() 
     {

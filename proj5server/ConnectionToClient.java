@@ -30,6 +30,40 @@ class ConnectionToClient implements Runnable
         thread.start(); 
     }
 
+    void handleLogout() throws IOException 
+    {
+        String userName = null;
+        if(user !=null)
+        {
+            userName = user.userName;
+            user.loggedIn = false;
+            user.connection = null;
+        }
+
+        if (user != null && user.isLoggedIn()) 
+        {
+            user.loggedIn = false;
+            user.connection = null;
+            
+            for (String buddy : user.buddylist)             // tell all his frriends that he logged out
+            {
+                User buddyUser = userList.get(buddy);                  //gets his  buddys User class
+                if (buddyUser != null && buddyUser.isLoggedIn())       //as long as that person exists and is online, send them the message
+                {
+                    buddyUser.connection.talker.sendMessage("friendLogout " + user.userName);  //if person A logs out, user.userName is person A
+                }
+            }
+
+            user = null;                                        // Reset the user and talker objects
+          //  talker = new Talker(clientSocket);
+         //   talker.sendMessage("logout success");
+        } 
+        else 
+        {
+          //  talker.sendMessage("logout failed");
+        }
+    }
+
     void handleLogin() throws IOException
     {
         user = userList.get(clientID);     //returns the user that logs in
@@ -85,16 +119,18 @@ class ConnectionToClient implements Runnable
         }
     }
 
-    void handleAddFriendResponse(String initiatorID) throws IOException
+    void handleAddFriendResponse(String recieverID) throws IOException
     {
-       // String potentialFriend = clientID;
+        potentialFriend = clientID;
         if(response.equals("0"))
         {
-            user.buddylist.add(initiatorID);  // add friend to buddylist with the key being the username and the value being the User object
-            potentialUser = userList.get(initiatorID); // get the User object of the potential friend
+            user.buddylist.add(recieverID);  // add friend to buddylist with the key being the username and the value being the User object
+            potentialUser = userList.get(recieverID); // get the User object of the potential friend
             potentialUser.buddylist.add(user.userName); // add the user to the potential friend's buddylist   so now both users have each other in their buddylist
-       //     User initiatorUser = userList.get(potentialUser.initiatorUserName); // get the User object of the initiator
-            potentialUser.connection.talker.sendMessage("addFriendSuccess " + user.userName + " " + potentialUser.initiatorUserName); // send  command to the initiator
+
+            
+            potentialUser.connection.talker.sendMessage("addFriendSuccess " + user.userName + " " + recieverID); // send  command to the initiator
+
             try 
             {
                 DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.txt"));
@@ -107,83 +143,84 @@ class ConnectionToClient implements Runnable
         else
         {
             potentialUser = userList.get(potentialFriend); // get the User object of the potential friend
-            potentialUser.connection.talker.sendMessage("addfriend failed " + user.userName + " " + potentialFriend); // send the addfriend command to the potential friend
+        //   potentialUser.connection.talker.sendMessage("addfriend failed " + user.userName + " " + potentialFriend); // send the addfriend command to the potential friend
 
-            talker.sendMessage("addfriend failed");
+        //  talker.sendMessage("addfriend failed");
         }
-    }
+}
     
 
     void handleAddFriend() throws IOException
+{
+    potentialFriend = friendUserName; // Potential friend has the friend's username; if person A is trying to add person B
+    if(userList.isUsernameInUse(potentialFriend)) // As long as person B is a registered User, try to add them
     {
-        String potentialFriend = clientID;
-        if(userList.isUsernameInUse(potentialFriend))
-        {
-            potentialUser = userList.get(potentialFriend); // get the User object of the potential friend
-            potentialUser.initiatorUserName = user.userName;
-            potentialUser.connection.talker.sendMessage("addfriend " + user.userName + " " + potentialFriend); // send the addfriend command to the potential friend
-        }
-        else
-        {
-            //talker.sendMessage("addfriend failed");
-        }
+        User potentialFriendUser = userList.get(potentialFriend); // Get the User object of the potential friend
+        potentialFriendUser.initiatorUserName = user.userName; // Set the initiatorUserName
+        potentialFriendUser.connection.talker.sendMessage("addfriend " + user.userName + " " + potentialFriend); // Use person B's talker to ask B if they want to add A
     }
+    else
+    {
+        System.out.println("i shouldnt be here \n");
+    }
+}
 
     @Override
     public void run() 
-    {  
+    {
         try 
-        {         
-            while(true)
-            {  
+        {
+            while (true) 
+            {
                 String message;
-                message = talker.receiveMessage();                                                              // read message from client
-                command = "";  // reset command
-                if(message.startsWith("register") || message.startsWith("login"))
+                message = talker.receiveMessage(); // read message from client
+                command = ""; // reset command
+                if (message.startsWith("register") || message.startsWith("login")) 
                 {
                     information = message.split(" ");
                     command = information[0];
                     clientID = information[1];
                     clientPassword = information[2];
+
+                    if (command.equals("register")) 
+                    {
+                        handleRegister();
+                    } 
+                    else if (command.equals("login")) 
+                    {
+                        handleLogin();
+                    }
                 }
-                else if(message.startsWith("addfriend"))
+                else if (message.startsWith("logout")) 
+                {
+                    handleLogout();
+                }
+                else if (message.startsWith("addfriend")) 
                 {
                     information = message.split(" ");
                     command = information[0];
-                    clientID = information[1];
+                    friendUserName = information[1];                        // The friend's username that person A is trying to add so "B"
                     handleAddFriend();
-                }
-                else if(message.startsWith("addFriendResponse"))
+                } 
+                else if (message.startsWith("addFriendResponse")) //B's talker send back   B, yes 
                 {
                     information = message.split(" ");
                     command = information[0];
                     clientID = information[1];
                     response = information[2];
-                    handleAddFriendResponse(clientID);
-                }
-
-                if(command.equals("register"))
+                    handleAddFriendResponse(clientID);    //client iD will be (B)
+                } 
+                else 
                 {
-                    handleRegister();
+                    System.out.println("Error: " + command);
                 }
-                else if (command.equals("login")) 
-                {
-                    handleLogin();
-                }
-                
-                else
-                {
-                System.out.println("Error: " + command);
-                }
-            } 
-        }
+            }
+        } 
         catch (IOException e) 
         {
             System.out.println("Error reading or writing to client (" + user.userName + "): " + e.getMessage());
-            user.loggedIn = false;
-            clientSocket = null;
-                                                  
         }
     }
 }
+
 

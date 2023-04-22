@@ -26,7 +26,7 @@ class Talker
         void sendMessage( String message) throws IOException 
         {
           outstream.writeBytes(message +  " \n");         
-         // System.out.println("Talker sent: " + message + " to: " + user.userName);                  
+          System.out.println("Talker sent: " + message + " to: " + user.userName);                  
         }
       
         String receiveMessage() throws IOException 

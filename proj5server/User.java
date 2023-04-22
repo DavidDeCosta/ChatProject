@@ -35,7 +35,7 @@ public class User
         store.writeUTF(userName);
         store.writeUTF(password);
         store.writeInt(buddylist.size());
-        System.out.println("Storing buddy list for " + userName + ": " + buddylist);
+    //    System.out.println("Storing buddy list for " + userName + ": " + buddylist);
         for (String buddyUserName : buddylist) {
             store.writeUTF(buddyUserName);
         }
@@ -45,12 +45,12 @@ public class User
         userName = load.readUTF();
         password = load.readUTF();
         int buddyListSize = load.readInt();
-        System.out.println("Loading buddy list for " + userName);
+     //   System.out.println("Loading buddy list for " + userName);
         for (int i = 0; i < buddyListSize; i++) {
             String buddyUserName = load.readUTF();
             buddylist.add(buddyUserName);
         }
-        System.out.println("Loaded buddy list for " + userName + ": " + buddylist);
+      //  System.out.println("Loaded buddy list for " + userName + ": " + buddylist);
     }
 
     void saveBuddyList(MyUserList userList) 

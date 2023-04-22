@@ -1,10 +1,16 @@
+
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.text.Element;
+import javax.swing.text.html.HTMLDocument;
+
 import java.awt.*;                                 // for Toolkit and Dimension
 import java.awt.event.*;                            // for ActionListener
 import java.io.*;
 import java.net.Socket;
 import java.util.Properties;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 class MainFrameGUI extends JFrame
                             implements ActionListener, MouseListener
@@ -67,6 +73,17 @@ class MainFrameGUI extends JFrame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);                          //when close frame the program stops
         setTitle("Project 4");
         setVisible(true);
+
+        
+        addWindowListener(new WindowAdapter()    // Add the window closing event handler so I can send "Logout" to server
+        {
+            @Override
+            public void windowClosing(WindowEvent e) 
+            {
+                handleLogout();
+                setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            }
+        });
     }
 
     void dialogSetup(boolean isLoginOption)
@@ -197,6 +214,22 @@ class MainFrameGUI extends JFrame
 
     }
 
+    void handleLogout()
+    {
+        if (talker != null) 
+        {
+            try 
+            {
+                talker.sendMessage("logout"); // Send a logout message to the server
+                //    talker.close(); // Close the socket connection
+            } 
+            catch (IOException e) 
+            {
+                System.out.println("Failed to send logout message or close the connection");
+            }
+        }
+    }
+
     void handleConnect()
     {
         String ip = fieldForIP.getText();
@@ -223,9 +256,21 @@ class MainFrameGUI extends JFrame
         dialog.dispose();
     }
 
-    void addFriendNameToList(String friendName)
-    {
-        justAListModel.addElement(new Friends(friendName));
+    public void addFriendNameToList(String friendName) {
+        // Check if the friend is already in the JList
+        boolean friendExists = false;
+        for (int i = 0; i < justAListModel.getSize(); i++) {
+            if (justAListModel.getElementAt(i).getName().equals(friendName)) {
+                friendExists = true;
+                break;
+            }
+        }
+    
+        // If the friend is not already in the JList, add them
+        if (!friendExists) {
+            Friends newFriend = new Friends(friendName);
+            justAListModel.addElement(newFriend);
+        }
     }
 
     void handleSend()
@@ -266,21 +311,60 @@ class MainFrameGUI extends JFrame
         JScrollPane chatScrollPane = new JScrollPane(editorPane);
         chatDialog.add(chatScrollPane, BorderLayout.CENTER);
 
-        JPanel messagePanel = new JPanel();
+        JPanel messagePanel = new JPanel(new BorderLayout());
         chatDialog.add(messagePanel, BorderLayout.SOUTH);
-
-        JTextArea messageArea = new JTextArea(3, 30);
+    
+        JTextArea messageArea = new JTextArea(4, 30);
         JScrollPane messageScrollPane = new JScrollPane(messageArea);
-        messagePanel.add(messageScrollPane);
-
-        JButton sendButton = new JButton("Send");
-        messagePanel.add(sendButton);
-        sendButton.addActionListener(this);
+        messagePanel.add(messageScrollPane, BorderLayout.CENTER);
+    
+        JButton sendButton = new JButton("SendFromChat");
+        sendButton.setText("Send");
+        messagePanel.add(sendButton, BorderLayout.EAST);
+        sendButton.addActionListener(e -> handleChatSend(friend, messageArea, editorPane,chatDialog));
 
         chatDialog.setSize(400, 300);
         chatDialog.setLocationRelativeTo(null);
         chatDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         chatDialog.setVisible(true);
+    }
+
+    void handleChatSend(Friends friend, JTextArea messageArea, JEditorPane editorPane, JDialog chatDialog) 
+    {
+        String messageText = messageArea.getText();
+        if (!messageText.trim().isEmpty()) {
+            // Send the message to the server
+            // ...
+    
+            // Display the sent message
+            addTextToChatPane(chatDialog, editorPane, messageText, true);
+            messageArea.setText("");
+        }
+    }
+
+    void addTextToChatPane(JDialog chatDialog, JEditorPane editorPane,String txt, boolean isSender)
+    {
+        String color = isSender ? "blue" : "green";
+        String align = isSender ? "right" : "left";
+        String formattedText = String.format("<p style='color:%s; text-align:%s;'>%s</p>", color, align, txt);
+    
+        HTMLDocument doc;
+        Element html;
+        Element body;
+
+        doc = (HTMLDocument) editorPane.getDocument();
+        html = doc.getRootElements()[0];
+        body = html.getElement(1);
+
+        try
+        {
+            doc.insertBeforeEnd(body, txt);
+            editorPane.setCaretPosition(editorPane.getDocument().getLength());
+        }
+        catch(Exception e)
+        {
+            System.out.println("Error inserting text");
+        }
     }
 
     void handleSubmit()
