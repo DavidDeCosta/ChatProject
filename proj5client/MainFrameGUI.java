@@ -8,6 +8,9 @@ import java.awt.*;                                 // for Toolkit and Dimension
 import java.awt.event.*;                            // for ActionListener
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -57,6 +60,7 @@ class MainFrameGUI extends JFrame
     JScrollPane tripScrollPane;
     MyListModel justAListModel;
 
+    Map<String, MyChatDialog> chatDialogs = new HashMap<>();    //name of the owner, then its chatdialog
 
     MainFrameGUI()
     {
@@ -234,7 +238,7 @@ class MainFrameGUI extends JFrame
     {
         String ip = fieldForIP.getText();
         int portNumber = Integer.parseInt(fieldForPortNumber.getText());
-        String userID = fieldForUserName.getText();
+        userID = fieldForUserName.getText();
         String password = fieldForPassword.getText();
 
         String message = "login " + userID + " " + password;                   // create the message to send to the server
@@ -300,15 +304,21 @@ class MainFrameGUI extends JFrame
         }
     }
 
-    void setupChatDialog(Friends friend)
+    void setupChatDialog(Friends friend, JFrame frame)
     {
-        JDialog chatDialog = new JDialog(this, friend.name, false);
-        chatDialog.setLayout(new BorderLayout());
+       // JDialog chatDialog = new JDialog(this, friend.name, false);
+
 
         JEditorPane editorPane = new JEditorPane();
         editorPane.setEditable(false);
         editorPane.setContentType("text/html");
         JScrollPane chatScrollPane = new JScrollPane(editorPane);
+
+        MyChatDialog chatDialog = new MyChatDialog(friend, editorPane, frame);
+        chatDialog.setTitle(friend.name);
+        chatDialog.setModal(false);
+        chatDialog.setLayout(new BorderLayout());
+
         chatDialog.add(chatScrollPane, BorderLayout.CENTER);
 
         JPanel messagePanel = new JPanel(new BorderLayout());
@@ -327,43 +337,66 @@ class MainFrameGUI extends JFrame
         chatDialog.setLocationRelativeTo(null);
         chatDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         chatDialog.setVisible(true);
+
+        chatDialogs.put(friend.getName(), chatDialog);   //add the chatdialog to the hashmap
     }
 
     void handleChatSend(Friends friend, JTextArea messageArea, JEditorPane editorPane, JDialog chatDialog) 
     {
+
         String messageText = messageArea.getText();
         if (!messageText.trim().isEmpty()) {
-            // Send the message to the server
-            // ...
+            try 
+            {
+                String messageToSend = "message " + userID + " " + friend.getName() + " " + messageText ;
+                talker.sendMessage(messageToSend);
+            } catch (IOException e) 
+            {
+                e.printStackTrace();
+            }
     
-            // Display the sent message
             addTextToChatPane(chatDialog, editorPane, messageText, true);
             messageArea.setText("");
         }
     }
 
+    MyChatDialog findChatDialog(String userID) 
+    {
+        return chatDialogs.get(userID);
+    }
+
     void addTextToChatPane(JDialog chatDialog, JEditorPane editorPane,String txt, boolean isSender)
     {
-        String color = isSender ? "blue" : "green";
-        String align = isSender ? "right" : "left";
+
+        String color = isSender ? "blue" : "red";
+        String align = isSender ? "left" : "right";
         String formattedText = String.format("<p style='color:%s; text-align:%s;'>%s</p>", color, align, txt);
-    
-        HTMLDocument doc;
-        Element html;
-        Element body;
 
-        doc = (HTMLDocument) editorPane.getDocument();
-        html = doc.getRootElements()[0];
-        body = html.getElement(1);
+        HTMLDocument doc = (HTMLDocument) editorPane.getDocument();
+        Element body = doc.getDefaultRootElement().getElement(0);
 
-        try
+        if (body.getElementCount() == 0) 
         {
-            doc.insertBeforeEnd(body, txt);
-            editorPane.setCaretPosition(editorPane.getDocument().getLength());
+            try 
+            {
+                doc.insertBeforeEnd(body, "<div id='content'></div>");
+            } 
+            catch (Exception e) 
+            {
+                System.out.println("Error inserting initial content");
+            }
         }
-        catch(Exception e)
+
+        Element contentDiv = body.getElement(0);
+
+        try 
         {
-            System.out.println("Error inserting text");
+            doc.insertBeforeEnd(contentDiv, formattedText);
+            editorPane.setCaretPosition(editorPane.getDocument().getLength());
+        } 
+        catch (Exception e) 
+        {
+        System.out.println("Error inserting text");
         }
     }
 
@@ -504,7 +537,7 @@ class MainFrameGUI extends JFrame
             int index = displayList.locationToIndex(e.getPoint());   //get the index of the item that was clicked
             Friends friend = (Friends)justAListModel.getElementAt(index);  //get the friend object at that index
             String friendName = friend.getName();               //get the name of the friend
-            setupChatDialog(friend);                      //create a new chat dialog for the friend
+            setupChatDialog(friend,this);                      //create a new chat dialog for the friend
 
         }
     }

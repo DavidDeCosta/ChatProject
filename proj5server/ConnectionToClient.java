@@ -165,6 +165,17 @@ class ConnectionToClient implements Runnable
     }
 }
 
+void handleSendMessage(String receiverID, String messageText) throws IOException 
+{
+    User receiverUser = userList.get(receiverID);
+    if (receiverUser != null && receiverUser.isLoggedIn()) 
+    {
+        receiverUser.connection.talker.sendMessage("message " + user.userName + " " + messageText);
+    } else {
+        System.out.println("Failed to send message to " + receiverID);
+    }
+}
+
     @Override
     public void run() 
     {
@@ -210,6 +221,15 @@ class ConnectionToClient implements Runnable
                     response = information[2];
                     handleAddFriendResponse(clientID);    //client iD will be (B)
                 } 
+                else if (message.startsWith("message")) 
+                {
+                    information = message.split(" ", 4); // Limit the split to 4 parts
+                    command = information[0];
+                    String clientID = information[1];   //person A who send the message
+                    String receiverID = information[2]; //person B who is recieving the sent message from A
+                    String messageText = information[3]; 
+                    handleSendMessage(receiverID, messageText);
+                }
                 else 
                 {
                     System.out.println("Error: " + command);

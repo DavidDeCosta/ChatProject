@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.net.*;
 
+import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -54,13 +56,30 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                 {
                     String[] parts = recievedMessage.split(" ");
                     String friendName = parts[1];
-                    SwingUtilities.invokeLater(new Runnable() {
+                    SwingUtilities.invokeLater(new Runnable() 
+                    {
                     @Override
-                    public void run() {
-                    mainFrameGUI.addFriendNameToList(friendName);
-                }
-                });
+                    public void run() 
+                    {
+                        mainFrameGUI.addFriendNameToList(friendName);
+                    }
+                    });
                     command = "";
+                }
+                else if(recievedMessage.startsWith("message"))
+                {
+                    String[] messageParts = recievedMessage.split(" ", 4);
+                    String sender = messageParts[1];
+                    String messageText = messageParts[2];
+                    String friendName = messageParts[3];
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            MyChatDialog chatDialog = mainFrameGUI.findChatDialog(sender);
+                            JEditorPane editorPane = chatDialog.getEditorPane();
+                            mainFrameGUI.addTextToChatPane(chatDialog, editorPane, messageText, false);
+                        }
+                    });
                 }
                 if (command.equals("addfriend") && userID.equals(receiverID)&& !userID.equals(senderID)) 
                 {
