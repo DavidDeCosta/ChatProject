@@ -3,12 +3,10 @@ import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.text.Element;
 import javax.swing.text.html.HTMLDocument;
-
 import java.awt.*;                                 // for Toolkit and Dimension
 import java.awt.event.*;                            // for ActionListener
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -260,7 +258,7 @@ class MainFrameGUI extends JFrame
         dialog.dispose();
     }
 
-    public void addFriendNameToList(String friendName) {
+    void addFriendNameToList(String friendName) {
         // Check if the friend is already in the JList
         boolean friendExists = false;
         for (int i = 0; i < justAListModel.getSize(); i++) {
@@ -306,9 +304,6 @@ class MainFrameGUI extends JFrame
 
     void setupChatDialog(Friends friend, JFrame frame)
     {
-       // JDialog chatDialog = new JDialog(this, friend.name, false);
-
-
         JEditorPane editorPane = new JEditorPane();
         editorPane.setEditable(false);
         editorPane.setContentType("text/html");
@@ -333,15 +328,16 @@ class MainFrameGUI extends JFrame
         messagePanel.add(sendButton, BorderLayout.EAST);
         sendButton.addActionListener(e -> handleChatSend(friend, messageArea, editorPane,chatDialog));
 
-        chatDialog.setSize(400, 300);
+        chatDialog.setSize(450, 350);
         chatDialog.setLocationRelativeTo(null);
         chatDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         chatDialog.setVisible(true);
 
+
         chatDialogs.put(friend.getName(), chatDialog);   //add the chatdialog to the hashmap
     }
 
-    void handleChatSend(Friends friend, JTextArea messageArea, JEditorPane editorPane, JDialog chatDialog) 
+    void handleChatSend(Friends friend, JTextArea messageArea, JEditorPane editorPane, MyChatDialog chatDialog) 
     {
 
         String messageText = messageArea.getText();
@@ -365,40 +361,38 @@ class MainFrameGUI extends JFrame
         return chatDialogs.get(userID);
     }
 
-    void addTextToChatPane(JDialog chatDialog, JEditorPane editorPane,String txt, boolean isSender)
+    void addTextToChatPane(JDialog chatDialog, JEditorPane editorPane, String txt, boolean isSender)
+{
+    String color = isSender ? "blue" : "red";
+    String floatSide = isSender ? "left" : "right";
+    String formattedText = String.format("<div style='float:%s;'><p style='color:%s;'>%s</p></div><div style='clear:both;'></div>", floatSide, color, txt);
+
+    HTMLDocument doc = (HTMLDocument) editorPane.getDocument();
+    Element body = doc.getDefaultRootElement().getElement(0);
+
+    if (body.getElementCount() == 0) 
     {
-
-        String color = isSender ? "blue" : "red";
-        String align = isSender ? "left" : "right";
-        String formattedText = String.format("<p style='color:%s; text-align:%s;'>%s</p>", color, align, txt);
-
-        HTMLDocument doc = (HTMLDocument) editorPane.getDocument();
-        Element body = doc.getDefaultRootElement().getElement(0);
-
-        if (body.getElementCount() == 0) 
-        {
-            try 
-            {
-                doc.insertBeforeEnd(body, "<div id='content'></div>");
-            } 
-            catch (Exception e) 
-            {
-                System.out.println("Error inserting initial content");
-            }
-        }
-
-        Element contentDiv = body.getElement(0);
-
         try 
         {
-            doc.insertBeforeEnd(contentDiv, formattedText);
-            editorPane.setCaretPosition(editorPane.getDocument().getLength());
+            doc.insertBeforeEnd(body, "<div id='content'></div>");
         } 
         catch (Exception e) 
         {
-        System.out.println("Error inserting text");
+            System.out.println("Error inserting initial content");
         }
     }
+
+    try 
+    {
+        doc.insertAfterEnd(body.getElement(body.getElementCount() - 1), formattedText);
+        editorPane.setCaretPosition(editorPane.getDocument().getLength());
+    } 
+    catch (Exception e) 
+    {
+        System.out.println("Error inserting text");
+    }
+}
+
 
     void handleSubmit()
     {

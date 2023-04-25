@@ -1,7 +1,5 @@
 import java.io.IOException;
 import java.net.*;
-
-import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
