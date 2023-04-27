@@ -31,34 +31,26 @@ class ConnectionToClient implements Runnable
     }
 
     void handleLogout() throws IOException 
+{
+   // String userName = null;
+    if (user != null)
     {
-        String userName = null;
-        if (user != null)
+      //  userName = user.userName;
+        user.loggedIn = false; // Set loggedIn to false
+        user.connection = null;
+
+        for (String buddy : user.buddylist) 
         {
-            userName = user.userName;
-            user.loggedIn = false; // Set loggedIn to false
-            user.connection = null;
-        }
-    
-        if (user != null && user.isLoggedIn()) 
-        {
-            
-        } 
-        else 
-        {
-            
-            for (String buddy : user.buddylist) 
+            User buddyUser = userList.get(buddy); // gets his buddy's User class
+            if (buddyUser != null && buddyUser.isLoggedIn()) // as long as that person exists and is online, send them the message
             {
-                User buddyUser = userList.get(buddy); // gets his buddy's User class
-                if (buddyUser != null && buddyUser.isLoggedIn()) // as long as that person exists and is online, send them the message
-                {
-                    buddyUser.connection.talker.sendMessage("friendLogout " + user.userName); // if person A logs out, user.userName is person A
-                }
+                buddyUser.connection.talker.sendMessage("friendLogout " + user.userName); // if person A logs out, user.userName is person A
             }
-    
-            user = null; // Reset the user and talker objects
         }
+        user = null; // Reset the user and talker objects
     }
+}
+
     
 
     void handleLogin() throws IOException
@@ -70,17 +62,18 @@ class ConnectionToClient implements Runnable
             {
                 user.connection = this;                    //set the users connection to this instance             
                 talker = new Talker(clientSocket, user);
-                talker.sendMessage("login success");
+                talker.sendMessage("login success");   //let the user know the login was successful
                 
                 for (String buddy : user.buddylist)   //display that users buddy list, also send the client its buddys names
                 {
-                    System.out.println("buddy: " + buddy);
+                   // System.out.println("buddy: " + buddy);
                     talker.sendMessage("addFriendSuccess " + buddy + " " + clientID);
                 
-                    User buddyUser = userList.get(buddy);
-                    if (buddyUser != null && buddyUser.isLoggedIn()) 
+                    User buddyUser = userList.get(buddy);   //get your friends User class
+                    if (buddyUser != null && buddyUser.isLoggedIn())   //if the friend of you exists and are online use their talker to tell them your online
                     {
-                        buddyUser.connection.talker.sendMessage("addFriendSuccess " + clientID + " " + buddy);
+                     //   buddyUser.connection.talker.sendMessage("addFriendSuccess " + clientID + " " + buddy);  //tell the user u added them?
+                        buddyUser.connection.talker.sendMessage("onlineStatus " + clientID + " " + buddy);
                     }
                 }
                 user.loggedIn = true;
@@ -233,7 +226,13 @@ void handleSendMessage(String receiverID, String messageText) throws IOException
         } 
         catch (IOException e) 
         {
-            System.out.println("Error reading or writing to client (" + user.userName + "): " + e.getMessage());
+            if (user != null) 
+            {
+                System.out.println("Error reading or writing to client (" + user.userName + "): " + e.getMessage());
+            } else 
+            {
+                System.out.println("Error reading or writing to client: " + e.getMessage());
+            }
         }
     }
 }

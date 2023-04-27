@@ -54,7 +54,7 @@ class MainFrameGUI extends JFrame
     boolean isLoginOption = false;
     Properties properties;
 
-    JList<Friends> displayList;                           // displays their names
+    JList<Friend> displayList;                           // displays their names
     JScrollPane tripScrollPane;
     MyListModel justAListModel;
 
@@ -70,7 +70,7 @@ class MainFrameGUI extends JFrame
     {
         toolkit = Toolkit.getDefaultToolkit();                                    // used to help get the users screen size
         screenSize = toolkit.getScreenSize();                                     //get the users screen size
-        setSize((screenSize.width/2 + 70), (screenSize.height/2 + 70));           
+        setSize(400,500);           
         setLocationRelativeTo(null);                                           // window is placed in the center of screen
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);                          //when close frame the program stops
         setTitle("Project 4");
@@ -86,6 +86,7 @@ class MainFrameGUI extends JFrame
                 setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             }
         });
+        
     }
 
     void dialogSetup(boolean isLoginOption)
@@ -182,13 +183,10 @@ class MainFrameGUI extends JFrame
     void setupComponents()
     {
         justAListModel = new MyListModel();
-        displayList = new JList<Friends>(justAListModel);
+        displayList = new JList<Friend>(justAListModel);
         displayList.addMouseListener(this);
         tripScrollPane = new JScrollPane(displayList);
-        add(tripScrollPane, BorderLayout.EAST);
-
-        panel1 = new JPanel();
-        add(panel1, BorderLayout.NORTH);
+        add(tripScrollPane, BorderLayout.CENTER);
 
      //   textField = new JTextField(40);
      //   panel1.add(textField);
@@ -208,7 +206,7 @@ class MainFrameGUI extends JFrame
         logIn = new JButton("Login");
         logIn.addActionListener(this);
         panel2 = new JPanel();
-        add(panel2, BorderLayout.CENTER);
+        add(panel2, BorderLayout.NORTH);
 
         panel2.add(register);
         panel2.add(logIn);
@@ -272,9 +270,14 @@ class MainFrameGUI extends JFrame
         
         if (!friendExists)                                         // If the friend is not already in the JList, add them
         {
-            Friends newFriend = new Friends(friendName);
+            Friend newFriend = new Friend(friendName);
             justAListModel.addElement(newFriend);
         }
+    }
+
+    void setStatus(Friend friendName)
+    {
+        friendName.setOnline(true);
     }
 
     void handleSend()
@@ -283,7 +286,7 @@ class MainFrameGUI extends JFrame
         String message = textField.getText().trim();
         if(talker != null)
         {                                              // if the talker object is null then do nothing
-            if(message.isEmpty())                // if the message is empty then do nothing
+            if(message.isEmpty())                       // if the message is empty then do nothing
             {
                 return;
             }
@@ -304,7 +307,7 @@ class MainFrameGUI extends JFrame
         }
     }
 
-    void setupChatDialog(Friends friend, JFrame frame)
+    void setupChatDialog(Friend friend, JFrame frame)
     {
         JEditorPane editorPane = new JEditorPane();
         editorPane.setEditable(false);
@@ -341,7 +344,7 @@ class MainFrameGUI extends JFrame
         chatDialogs.put(friend.getName(), chatDialog);   //add the chatdialog to the hashmap
     }
 
-    void handleChatSend(Friends friend, JTextArea messageArea, JEditorPane editorPane, MyChatDialog chatDialog) 
+    void handleChatSend(Friend friend, JTextArea messageArea, JEditorPane editorPane, MyChatDialog chatDialog) 
     {
 
         String messageText = messageArea.getText();    //get the text from message area
@@ -538,11 +541,13 @@ class MainFrameGUI extends JFrame
     {
         if(e.getClickCount() == 2)
         {
-            int index = displayList.locationToIndex(e.getPoint());   //get the index of the item that was clicked
-            Friends friend = (Friends)justAListModel.getElementAt(index);  //get the friend object at that index
-         //   String friendName = friend.getName();               //get the name of the friend
-            setupChatDialog(friend,this);                      //create a new chat dialog for the friend
+            int index = displayList.locationToIndex(e.getPoint());          //get the index of the item that was clicked
+            Friend friend = (Friend)justAListModel.getElementAt(index);     //get the friend object at that index
+         //   String friendName = friend.getName();                         //get the name of the friend
 
+
+
+            setupChatDialog(friend,this);                                   //create a new chat dialog for the friend
         }
     }
 

@@ -1,9 +1,9 @@
-class Friends 
+class Friend 
 {
     String name;
     boolean online;
 
-    Friends(String name) 
+    Friend(String name) 
     {
         this.name = name;
         this.online = false;
@@ -27,6 +27,13 @@ class Friends
     @Override
     public String toString() 
     {
-        return name;
+        if(online)
+        {
+            return name + " *";
+        }
+        else
+        {
+            return name;
+        }
     }
 }

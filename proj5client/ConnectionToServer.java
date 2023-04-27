@@ -1,10 +1,9 @@
 import java.io.IOException;
 import java.net.*;
+import java.util.Vector;
 
-import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 class ConnectionToServer implements Runnable  // this class is used to create a new thread for each client
@@ -24,6 +23,8 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
     String senderID;
     MainFrameGUI mainFrameGUI;
 
+  //  Vector<Friend> friends = new Vector<>();
+
 
     ConnectionToServer(Socket normalSocket, String message,String userID, MainFrameGUI mainFrameGUI) throws IOException
     {
@@ -34,7 +35,6 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
         talker = new Talker(normalSocket);                                // create a talker for this client                        
         new Thread(this).start();                                        //client gets its own thread
     }
-
 
     @Override
     public void run() 
@@ -57,15 +57,30 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                 {
                     String[] parts = recievedMessage.split(" ");
                     String friendName = parts[1];
-                    SwingUtilities.invokeLater(new Runnable() 
-                    {
-                    @Override
-                    public void run() 
-                    {
-                        mainFrameGUI.addFriendNameToList(friendName);
-                    }
-                    });
+
+                    // Create a Friend object and add it to the justAListModel
+                    Friend newFriend = new Friend(friendName);
+                    mainFrameGUI.justAListModel.addElement(newFriend);
+
                     command = "";
+                }
+                else if(recievedMessage.startsWith("onlineStatus"))
+                {
+                    information = recievedMessage.split(" ");
+                    command = information[0];
+                    senderID = information[1];
+                    Friend f;
+                    System.out.println("senderid: " + senderID);
+                    f = mainFrameGUI.justAListModel.getFriend(senderID);
+    
+                    if (f != null) 
+                    {
+                        f.setOnline(true);
+                    } else 
+                    {
+                        System.out.println("Friend not found: " + senderID);
+                    }
+
                 }
                 else if(recievedMessage.startsWith("message"))
                 {
