@@ -1,7 +1,11 @@
 import java.io.IOException;
 import java.net.*;
+
+import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 
 class ConnectionToServer implements Runnable  // this class is used to create a new thread for each client
@@ -66,15 +70,15 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                 }
                 else if(recievedMessage.startsWith("message"))
                 {
-                    String[] messageParts = recievedMessage.split(" ", 4);
+                    String[] messageParts = recievedMessage.split(" ", 3);
                     String sender = messageParts[1];
                     String messageText = messageParts[2];
-                    String friendName = messageParts[3];
+                    System.out.println(messageParts[2]);
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
                             MyChatDialog chatDialog = mainFrameGUI.findChatDialog(sender);
-                            JEditorPane editorPane = chatDialog.getEditorPane();
+                            JEditorPane editorPane = (JTextPane) chatDialog.getEditorPane();
                             mainFrameGUI.addTextToChatPane(chatDialog, editorPane, messageText, false);
                         }
                     });

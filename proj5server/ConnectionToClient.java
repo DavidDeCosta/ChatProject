@@ -33,36 +33,35 @@ class ConnectionToClient implements Runnable
     void handleLogout() throws IOException 
     {
         String userName = null;
-        if(user !=null)
+        if (user != null)
         {
             userName = user.userName;
-            user.loggedIn = false;
+            user.loggedIn = false; // Set loggedIn to false
             user.connection = null;
         }
-
+    
         if (user != null && user.isLoggedIn()) 
         {
-            user.loggedIn = false;
-            user.connection = null;
-            
-            for (String buddy : user.buddylist)             // tell all his frriends that he logged out
-            {
-                User buddyUser = userList.get(buddy);                  //gets his  buddys User class
-                if (buddyUser != null && buddyUser.isLoggedIn())       //as long as that person exists and is online, send them the message
-                {
-                    buddyUser.connection.talker.sendMessage("friendLogout " + user.userName);  //if person A logs out, user.userName is person A
-                }
-            }
-
-            user = null;                                        // Reset the user and talker objects
-          //  talker = new Talker(clientSocket);
-         //   talker.sendMessage("logout success");
+            // This block will not execute because loggedIn is already set to false.
         } 
         else 
         {
-          //  talker.sendMessage("logout failed");
+            // Perform the logout actions here
+            for (String buddy : user.buddylist) // tell all his friends that he logged out
+            {
+                User buddyUser = userList.get(buddy); // gets his buddy's User class
+                if (buddyUser != null && buddyUser.isLoggedIn()) // as long as that person exists and is online, send them the message
+                {
+                    buddyUser.connection.talker.sendMessage("friendLogout " + user.userName); // if person A logs out, user.userName is person A
+                }
+            }
+    
+            user = null; // Reset the user and talker objects
+            // talker = new Talker(clientSocket);
+            // talker.sendMessage("logout success");
         }
     }
+    
 
     void handleLogin() throws IOException
     {

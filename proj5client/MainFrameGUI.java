@@ -309,6 +309,8 @@ class MainFrameGUI extends JFrame
         editorPane.setContentType("text/html");
         JScrollPane chatScrollPane = new JScrollPane(editorPane);
 
+        initializeEditorPane(editorPane);   //puts some initial text in the dialog
+
         MyChatDialog chatDialog = new MyChatDialog(friend, editorPane, frame);
         chatDialog.setTitle(friend.name);
         chatDialog.setModal(false);
@@ -361,37 +363,37 @@ class MainFrameGUI extends JFrame
         return chatDialogs.get(userID);
     }
 
-    void addTextToChatPane(JDialog chatDialog, JEditorPane editorPane, String txt, boolean isSender)
-{
-    String color = isSender ? "blue" : "red";
-    String floatSide = isSender ? "left" : "right";
-    String formattedText = String.format("<div style='float:%s;'><p style='color:%s;'>%s</p></div><div style='clear:both;'></div>", floatSide, color, txt);
+    void addTextToChatPane(JDialog chatDialog, JEditorPane editorPane, String txt, boolean isSender) {
 
-    HTMLDocument doc = (HTMLDocument) editorPane.getDocument();
-    Element body = doc.getDefaultRootElement().getElement(0);
-
-    if (body.getElementCount() == 0) 
-    {
-        try 
-        {
-            doc.insertBeforeEnd(body, "<div id='content'></div>");
-        } 
-        catch (Exception e) 
-        {
-            System.out.println("Error inserting initial content");
+        HTMLDocument doc;
+        Element html;
+        Element body;
+    
+        doc = (HTMLDocument) editorPane.getDocument();
+        html = doc.getRootElements()[0];
+        body = html.getElement(1);
+    
+        String alignment = isSender ? "left" : "right";
+        String color = isSender ? "blue" : "red";
+    
+        String htmlText = "<div align=\"" + alignment + "\">" +
+                "<font color=\"" + color + "\">" +
+                txt +
+                "</font></div>";
+    
+        try {
+            doc.insertBeforeEnd(body, htmlText);
+            editorPane.setCaretPosition(editorPane.getDocument().getLength());
+        } catch (Exception e) {
+            System.out.println("trouble \n");
         }
     }
 
-    try 
-    {
-        doc.insertAfterEnd(body.getElement(body.getElementCount() - 1), formattedText);
-        editorPane.setCaretPosition(editorPane.getDocument().getLength());
-    } 
-    catch (Exception e) 
-    {
-        System.out.println("Error inserting text");
+    void initializeEditorPane(JEditorPane editorPane) {
+        String initialHtml = "<html><head></head><body></body></html>";
+        editorPane.setContentType("text/html");
+        editorPane.setText(initialHtml);
     }
-}
 
 
     void handleSubmit()
