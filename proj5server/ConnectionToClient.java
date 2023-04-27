@@ -42,12 +42,12 @@ class ConnectionToClient implements Runnable
     
         if (user != null && user.isLoggedIn()) 
         {
-            // This block will not execute because loggedIn is already set to false.
+            
         } 
         else 
         {
-            // Perform the logout actions here
-            for (String buddy : user.buddylist) // tell all his friends that he logged out
+            
+            for (String buddy : user.buddylist) 
             {
                 User buddyUser = userList.get(buddy); // gets his buddy's User class
                 if (buddyUser != null && buddyUser.isLoggedIn()) // as long as that person exists and is online, send them the message
@@ -57,8 +57,6 @@ class ConnectionToClient implements Runnable
             }
     
             user = null; // Reset the user and talker objects
-            // talker = new Talker(clientSocket);
-            // talker.sendMessage("logout success");
         }
     }
     
@@ -142,9 +140,7 @@ class ConnectionToClient implements Runnable
         else
         {
             potentialUser = userList.get(potentialFriend); // get the User object of the potential friend
-        //   potentialUser.connection.talker.sendMessage("addfriend failed " + user.userName + " " + potentialFriend); // send the addfriend command to the potential friend
 
-        //  talker.sendMessage("addfriend failed");
         }
 }
     

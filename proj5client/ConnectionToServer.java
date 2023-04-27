@@ -5,7 +5,6 @@ import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 
 class ConnectionToServer implements Runnable  // this class is used to create a new thread for each client
@@ -78,7 +77,7 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                         @Override
                         public void run() {
                             MyChatDialog chatDialog = mainFrameGUI.findChatDialog(sender);
-                            JEditorPane editorPane = (JTextPane) chatDialog.getEditorPane();
+                            JEditorPane editorPane = chatDialog.getEditorPane();
                             mainFrameGUI.addTextToChatPane(chatDialog, editorPane, messageText, false);
                         }
                     });

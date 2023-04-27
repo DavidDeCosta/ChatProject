@@ -190,14 +190,14 @@ class MainFrameGUI extends JFrame
         panel1 = new JPanel();
         add(panel1, BorderLayout.NORTH);
 
-        textField = new JTextField(40);
-        panel1.add(textField);
-        send = new JButton("Send");
-        send.addActionListener(this);
-        exit = new JButton("Exit");
-        exit.addActionListener(this);
-        panel1.add(send);
-        panel1.add(exit);
+     //   textField = new JTextField(40);
+     //   panel1.add(textField);
+     //   send = new JButton("Send");
+      //  send.addActionListener(this);
+      //  exit = new JButton("Exit");
+    //    exit.addActionListener(this);
+      //  panel1.add(send);
+      //  panel1.add(exit);
 
         register = new JButton("Register");
         register.addActionListener(this);
@@ -258,18 +258,20 @@ class MainFrameGUI extends JFrame
         dialog.dispose();
     }
 
-    void addFriendNameToList(String friendName) {
-        // Check if the friend is already in the JList
-        boolean friendExists = false;
-        for (int i = 0; i < justAListModel.getSize(); i++) {
-            if (justAListModel.getElementAt(i).getName().equals(friendName)) {
+    void addFriendNameToList(String friendName) 
+    {
+        boolean friendExists = false;                                 // Check if the friend is already in the JList
+        for (int i = 0; i < justAListModel.getSize(); i++) 
+        {
+            if (justAListModel.getElementAt(i).getName().equals(friendName)) 
+            {
                 friendExists = true;
-                break;
+                return;
             }
         }
-    
-        // If the friend is not already in the JList, add them
-        if (!friendExists) {
+        
+        if (!friendExists)                                         // If the friend is not already in the JList, add them
+        {
             Friends newFriend = new Friends(friendName);
             justAListModel.addElement(newFriend);
         }
@@ -342,10 +344,12 @@ class MainFrameGUI extends JFrame
     void handleChatSend(Friends friend, JTextArea messageArea, JEditorPane editorPane, MyChatDialog chatDialog) 
     {
 
-        String messageText = messageArea.getText();
-        if (!messageText.trim().isEmpty()) {
+        String messageText = messageArea.getText();    //get the text from message area
+        if (!messageText.trim().isEmpty()) 
+        {
             try 
             {
+                                    // protocol msg + name of myself  + name of who im talking to  + the text of the msg
                 String messageToSend = "message " + userID + " " + friend.getName() + " " + messageText ;
                 talker.sendMessage(messageToSend);
             } catch (IOException e) 
@@ -363,8 +367,8 @@ class MainFrameGUI extends JFrame
         return chatDialogs.get(userID);
     }
 
-    void addTextToChatPane(JDialog chatDialog, JEditorPane editorPane, String txt, boolean isSender) {
-
+    void addTextToChatPane(JDialog chatDialog, JEditorPane editorPane, String txt, boolean isSender) 
+    {
         HTMLDocument doc;
         Element html;
         Element body;
@@ -381,15 +385,19 @@ class MainFrameGUI extends JFrame
                 txt +
                 "</font></div>";
     
-        try {
+        try 
+        {
             doc.insertBeforeEnd(body, htmlText);
             editorPane.setCaretPosition(editorPane.getDocument().getLength());
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             System.out.println("trouble \n");
         }
     }
 
-    void initializeEditorPane(JEditorPane editorPane) {
+    void initializeEditorPane(JEditorPane editorPane) 
+    {
         String initialHtml = "<html><head></head><body></body></html>";
         editorPane.setContentType("text/html");
         editorPane.setText(initialHtml);
@@ -532,7 +540,7 @@ class MainFrameGUI extends JFrame
         {
             int index = displayList.locationToIndex(e.getPoint());   //get the index of the item that was clicked
             Friends friend = (Friends)justAListModel.getElementAt(index);  //get the friend object at that index
-            String friendName = friend.getName();               //get the name of the friend
+         //   String friendName = friend.getName();               //get the name of the friend
             setupChatDialog(friend,this);                      //create a new chat dialog for the friend
 
         }
