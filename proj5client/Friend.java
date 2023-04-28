@@ -2,11 +2,19 @@ class Friend
 {
     String name;
     boolean online;
+    boolean hasPendingMessage;
 
     Friend(String name) 
     {
         this.name = name;
         this.online = false;
+        this.hasPendingMessage = false;
+
+    }
+
+    void setHasPendingMessage(boolean hasPendingMessage) 
+    {
+        this.hasPendingMessage = hasPendingMessage;
     }
 
     String getName() 
@@ -27,9 +35,17 @@ class Friend
     @Override
     public String toString() 
     {
-        if(online)
+        if(hasPendingMessage && online)
+        {
+            return name + " * (pending message)";
+        }
+        else if(online)
         {
             return name + " *";
+        }
+        else if(hasPendingMessage)
+        {
+            return name + " (pending message)";
         }
         else
         {

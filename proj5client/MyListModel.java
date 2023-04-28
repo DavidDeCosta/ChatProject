@@ -8,6 +8,13 @@ public class MyListModel extends DefaultListModel<Friend>
         super();
     }
 
+    void updateFriend(Friend friend) 
+    {
+        int index = this.indexOf(friend);
+        if (index >= 0) {
+            fireContentsChanged(this, index, index);
+        }
+    }
 
     Friend getFriend(String name) 
     {

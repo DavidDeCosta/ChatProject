@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.util.Vector;
 
 class ConnectionToClient implements Runnable 
 {
@@ -53,42 +54,48 @@ class ConnectionToClient implements Runnable
 
     
 
-    void handleLogin() throws IOException
+void handleLogin() throws IOException {
+    user = userList.get(clientID);     //returns the user that logs in
+    if (user != null && user.password.equals(clientPassword))  //as long as there was a user and the password matched
     {
-        user = userList.get(clientID);     //returns the user that logs in
-        if (user != null && user.password.equals(clientPassword))  //as long as there was a user and the password matched
+        if (!user.isLoggedIn())  //also makes sure they arent already logged in
         {
-            if (!user.isLoggedIn())  //also makes sure they arent already logged in
+            user.connection = this;                    //set the users connection to this instance             
+            talker = new Talker(clientSocket, user);
+            talker.sendMessage("login success");   //let the user know the login was successful
+            
+            for (String buddy : user.buddylist)   //display that users buddy list, also send the client its buddys names
             {
-                user.connection = this;                    //set the users connection to this instance             
-                talker = new Talker(clientSocket, user);
-                talker.sendMessage("login success");   //let the user know the login was successful
-                
-                for (String buddy : user.buddylist)   //display that users buddy list, also send the client its buddys names
-                {
-                   // System.out.println("buddy: " + buddy);
-                    talker.sendMessage("addFriendSuccess " + buddy + " " + clientID);
-                
-                    User buddyUser = userList.get(buddy);   //get your friends User class
-                    if (buddyUser != null && buddyUser.isLoggedIn())   //if the friend of you exists and are online use their talker to tell them your online
+                talker.sendMessage("addFriendSuccess " + buddy + " " + clientID);
+            
+                User buddyUser = userList.get(buddy);   //get your friends User class
+                if (buddyUser != null) {
+                    if (buddyUser.isLoggedIn())   //if the friend of you exists and are online use their talker to tell them your online
                     {
-                     //   buddyUser.connection.talker.sendMessage("addFriendSuccess " + clientID + " " + buddy);  //tell the user u added them?
                         buddyUser.connection.talker.sendMessage("onlineStatus " + clientID + " " + buddy);
+                        talker.sendMessage("onlineStatus " + buddy + " " + clientID); // Send onlineStatus to the user for each online friend
                     }
                 }
-                user.loggedIn = true;
-            } 
-            else 
-            {
-                talker.sendMessage("already logged in");
             }
+            user.loggedIn = true;
+            for (String pendingMessage : user.getPendingMessages()) 
+            {
+                talker.sendMessage("pendingMessage " + pendingMessage);
+            }
+            user.clearPendingMessages();
         } 
         else 
         {
-            System.out.println("Login failed");
-            talker.sendMessage("login failed");
+            talker.sendMessage("already logged in");
         }
+    } 
+    else 
+    {
+        System.out.println("Login failed");
+        talker.sendMessage("login failed");
     }
+}
+
 
     void handleRegister() throws IOException
     {
@@ -138,14 +145,24 @@ class ConnectionToClient implements Runnable
 }
     
 
-    void handleAddFriend() throws IOException
+void handleAddFriend() throws IOException
 {
     potentialFriend = friendUserName; // Potential friend has the friend's username; if person A is trying to add person B
     if(userList.isUsernameInUse(potentialFriend)) // As long as person B is a registered User, try to add them
     {
         User potentialFriendUser = userList.get(potentialFriend); // Get the User object of the potential friend
         potentialFriendUser.initiatorUserName = user.userName; // Set the initiatorUserName
-        potentialFriendUser.connection.talker.sendMessage("addfriend " + user.userName + " " + potentialFriend); // Use person B's talker to ask B if they want to add A
+        if (potentialFriendUser.isLoggedIn()) {
+            potentialFriendUser.connection.talker.sendMessage("addfriend " + user.userName + " " + potentialFriend); // Use person B's talker to ask B if they want to add A
+        } else {
+            // If person B is offline, store the friend request in their pending messages
+            String friendRequestMessage = "addfriend " + user.userName + " " + potentialFriend;
+            if (potentialFriendUser.pendingMessages == null) 
+            {
+                potentialFriendUser.pendingMessages = new Vector<String>();
+            }
+            potentialFriendUser.pendingMessages.add(friendRequestMessage);
+        }
     }
     else
     {
@@ -156,11 +173,55 @@ class ConnectionToClient implements Runnable
 void handleSendMessage(String receiverID, String messageText) throws IOException 
 {
     User receiverUser = userList.get(receiverID);
-    if (receiverUser != null && receiverUser.isLoggedIn()) 
+    if (receiverUser != null) 
     {
-        receiverUser.connection.talker.sendMessage("message " + user.userName + " " + messageText);
-    } else {
+        if (receiverUser.isLoggedIn()) 
+        {
+            receiverUser.connection.talker.sendMessage("message " + user.userName + " " + messageText);
+        } 
+        else 
+        {
+            // Add the message as a pending message for the offline user
+            receiverUser.addPendingMessage("message " + user.userName + " " + messageText);
+        }
+    } 
+    else 
+    {
         System.out.println("Failed to send message to " + receiverID);
+    }
+}
+
+void handleRemoveFriend(String friendToRemove) throws IOException 
+{
+    if (user.buddylist.contains(friendToRemove)) 
+    {
+        user.buddylist.remove(friendToRemove); // Remove friend from the user's buddy list
+        User removedFriend = userList.get(friendToRemove); // Get the User object of the removed friend
+
+        if (removedFriend != null) 
+        {
+            removedFriend.buddylist.remove(user.userName); // Remove the user from the removed friend's buddy list
+
+            if (removedFriend.isLoggedIn()) 
+            {
+                // Inform the removed friend that they have been removed
+                removedFriend.connection.talker.sendMessage("friendRemoved " + user.userName);
+            }
+
+            try 
+            {
+                DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.txt"));
+                userList.save(save);
+            } 
+            catch (IOException e) 
+            {
+                System.out.println("Error saving the user list: " + e.getMessage());
+            }
+        }
+    } 
+    else 
+    {
+        System.out.println("Friend not found in the buddy list");
     }
 }
 
@@ -217,6 +278,13 @@ void handleSendMessage(String receiverID, String messageText) throws IOException
                     String receiverID = information[2]; //person B who is recieving the sent message from A
                     String messageText = information[3]; 
                     handleSendMessage(receiverID, messageText);
+                }
+                else if (message.startsWith("removefriend")) 
+                {
+                    information = message.split(" ");
+                    command = information[0];
+                    String friendToRemove = information[1];
+                    handleRemoveFriend(friendToRemove);
                 }
                 else 
                 {

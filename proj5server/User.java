@@ -9,20 +9,38 @@ public class User
     Vector<String> buddylist;
     boolean loggedIn;
     String initiatorUserName;
+    Vector<String> pendingMessages;
 
-    User(String userName, String password)
+    User(String userName, String password) 
     {
         this.userName = userName;
         this.password = password;
         buddylist = new Vector<String>();
+        pendingMessages = new Vector<String>();
     }
-
-    User(String userName, String password, ConnectionToClient connection)
+    
+    User(String userName, String password, ConnectionToClient connection) 
     {
         this.userName = userName;
         this.password = password;
         this.connection = connection;
         buddylist = new Vector<String>();
+        pendingMessages = new Vector<String>();
+    }
+
+    void addPendingMessage(String message) 
+    {
+        pendingMessages.add(message);
+    }
+    
+    Vector<String> getPendingMessages() 
+    {
+        return pendingMessages;
+    }
+    
+    void clearPendingMessages() 
+    {
+        pendingMessages.clear();
     }
 
     boolean isLoggedIn()

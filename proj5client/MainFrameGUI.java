@@ -8,8 +8,10 @@ import java.awt.event.*;                            // for ActionListener
 import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Vector;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -59,11 +61,23 @@ class MainFrameGUI extends JFrame
     MyListModel justAListModel;
 
     Map<String, MyChatDialog> chatDialogs = new HashMap<>();    //name of the owner, then its chatdialog
+    Hashtable<String, Vector<String>> pendingMessages;
+
 
     MainFrameGUI()
     {
+        pendingMessages = new Hashtable<>();
         setupComponents();
         buildMainFrame();
+    }
+
+    void storePendingMessage(String sender, String messageText) 
+    {
+        if (!pendingMessages.containsKey(sender)) 
+        {
+            pendingMessages.put(sender, new Vector<String>());
+        }
+        pendingMessages.get(sender).addElement(messageText);
     }
 
     void buildMainFrame()
@@ -188,15 +202,6 @@ class MainFrameGUI extends JFrame
         tripScrollPane = new JScrollPane(displayList);
         add(tripScrollPane, BorderLayout.CENTER);
 
-     //   textField = new JTextField(40);
-     //   panel1.add(textField);
-     //   send = new JButton("Send");
-      //  send.addActionListener(this);
-      //  exit = new JButton("Exit");
-    //    exit.addActionListener(this);
-      //  panel1.add(send);
-      //  panel1.add(exit);
-
         register = new JButton("Register");
         register.addActionListener(this);
 
@@ -307,7 +312,7 @@ class MainFrameGUI extends JFrame
         }
     }
 
-    void setupChatDialog(Friend friend, JFrame frame)
+    void setupChatDialog(Friend friend, JFrame frame,Vector<String> pendingMessages)
     {
         JEditorPane editorPane = new JEditorPane();
         editorPane.setEditable(false);
@@ -315,6 +320,8 @@ class MainFrameGUI extends JFrame
         JScrollPane chatScrollPane = new JScrollPane(editorPane);
 
         initializeEditorPane(editorPane);   //puts some initial text in the dialog
+
+
 
         MyChatDialog chatDialog = new MyChatDialog(friend, editorPane, frame);
         chatDialog.setTitle(friend.name);
@@ -329,11 +336,34 @@ class MainFrameGUI extends JFrame
         JTextArea messageArea = new JTextArea(4, 30);
         JScrollPane messageScrollPane = new JScrollPane(messageArea);
         messagePanel.add(messageScrollPane, BorderLayout.CENTER);
+
+        if (pendingMessages != null) 
+        {
+            for (String messageText : pendingMessages) 
+            {
+                addTextToChatPane(chatDialog, editorPane, messageText, false);
+            }
+        }
+
     
         JButton sendButton = new JButton("SendFromChat");
         sendButton.setText("Send");
         messagePanel.add(sendButton, BorderLayout.EAST);
         sendButton.addActionListener(e -> handleChatSend(friend, messageArea, editorPane,chatDialog));
+
+        if (friend.hasPendingMessage) 
+        {
+            Vector<String> pendingMessagesForFriend = connectionToServer.getAndClearPendingMessagesForFriend(friend.getName());
+            if (pendingMessagesForFriend != null) 
+            {
+                for (String message : pendingMessagesForFriend) 
+                {
+                    addTextToChatPane(chatDialog, editorPane, message, false);
+                }
+            }
+            friend.setHasPendingMessage(false);
+            justAListModel.updateFriend(friend);
+        }
 
         chatDialog.setSize(450, 350);
         chatDialog.setLocationRelativeTo(null);
@@ -342,6 +372,8 @@ class MainFrameGUI extends JFrame
 
 
         chatDialogs.put(friend.getName(), chatDialog);   //add the chatdialog to the hashmap
+
+    
     }
 
     void handleChatSend(Friend friend, JTextArea messageArea, JEditorPane editorPane, MyChatDialog chatDialog) 
@@ -498,6 +530,40 @@ class MainFrameGUI extends JFrame
         return properties;
     }
 
+    JPopupMenu createContextMenu() 
+    {
+        JPopupMenu contextMenu = new JPopupMenu();
+        JMenuItem removeFriendMenuItem = new JMenuItem("Remove Friend");
+        removeFriendMenuItem.addActionListener(this);
+        removeFriendMenuItem.setActionCommand("removeFriend");
+        contextMenu.add(removeFriendMenuItem);
+        return contextMenu;
+    }
+
+    void handleRemoveFriend() 
+    {
+        int selectedIndex = displayList.getSelectedIndex();
+        if (selectedIndex >= 0) 
+        {
+            Friend friend = justAListModel.getElementAt(selectedIndex);
+            String friendName = friend.getName();
+    
+            // Send a message to the server to remove the friend from the buddy list
+            String message = "removefriend " + friendName;
+            try 
+            {
+                talker.sendMessage(message);
+            } 
+            catch (IOException ex) 
+            {
+                System.out.println("Failed to send remove friend message");
+            }
+    
+            // Remove the friend from the JList
+            justAListModel.removeElementAt(selectedIndex);
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) 
     {
@@ -533,7 +599,11 @@ class MainFrameGUI extends JFrame
         {
             handleAddFriend();
         }
-        
+        else if (e.getActionCommand().equals("removeFriend")) 
+        {
+            handleRemoveFriend();
+            System.out.println("i removed the friend \n");
+        }
     }
 
     @Override
@@ -542,12 +612,28 @@ class MainFrameGUI extends JFrame
         if(e.getClickCount() == 2)
         {
             int index = displayList.locationToIndex(e.getPoint());          //get the index of the item that was clicked
-            Friend friend = (Friend)justAListModel.getElementAt(index);     //get the friend object at that index
-         //   String friendName = friend.getName();                         //get the name of the friend
+            Friend friend = (Friend) justAListModel.getElementAt(index);     //get the friend object at that index
 
-
-
-            setupChatDialog(friend,this);                                   //create a new chat dialog for the friend
+            // Check if a chat dialog is already open for the friend
+            if (!chatDialogs.containsKey(friend.getName())) 
+            {
+            Vector<String> pendingMessagesForFriend = pendingMessages.get(friend.getName());
+            setupChatDialog(friend, this, pendingMessagesForFriend);                                   //create a new chat dialog for the friend
+                if (pendingMessagesForFriend != null) 
+                {
+                pendingMessagesForFriend.clear();
+                }
+            }
+        }
+        else if (SwingUtilities.isRightMouseButton(e)) 
+        {
+            int index = displayList.locationToIndex(e.getPoint());
+            if (index >= 0) 
+            {
+                displayList.setSelectedIndex(index);
+                JPopupMenu contextMenu = createContextMenu();
+                contextMenu.show(displayList, e.getX(), e.getY());
+            }
         }
     }
 
