@@ -3,7 +3,6 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.regex.Pattern;
-
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -50,7 +49,8 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
         return null;
     }
 
-    void handlePendingMessages() {
+    void handlePendingMessages() 
+    {
         String[] messageParts = recievedMessage.split(" ", 2);
         String messageType = messageParts[0];
         String messageContent = messageParts[1];
@@ -186,7 +186,8 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                     String sender = messageParts[1];
                     String messageText = messageParts[2];
                     System.out.println(messageParts[2]);
-                    SwingUtilities.invokeLater(new Runnable() {
+                    SwingUtilities.invokeLater(new Runnable() 
+                    {
                         @Override
                         public void run() {
                             MyChatDialog chatDialog = mainFrameGUI.findChatDialog(sender);

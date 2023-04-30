@@ -12,11 +12,10 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
-import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 class MainFrameGUI extends JFrame
-                            implements ActionListener, MouseListener
+                            implements ActionListener, MouseListener, WindowListener
 {
 
     Toolkit toolkit;
@@ -63,6 +62,7 @@ class MainFrameGUI extends JFrame
     Map<String, MyChatDialog> chatDialogs = new HashMap<>();    //name of the owner, then its chatdialog
     Hashtable<String, Vector<String>> pendingMessages;
 
+    Friend friend;
 
     MainFrameGUI()
     {
@@ -90,17 +90,9 @@ class MainFrameGUI extends JFrame
         setTitle("Project 4");
         setVisible(true);
 
-        
-        addWindowListener(new WindowAdapter()    // Add the window closing event handler so I can send "Logout" to server
-        {
-            @Override
-            public void windowClosing(WindowEvent e) 
-            {
-                handleLogout();
-                setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            }
-        });
-        
+        addWindowListener(this);  // to send logout message to server when window is closed
+
+
     }
 
     void dialogSetup(boolean isLoginOption)
@@ -314,6 +306,8 @@ class MainFrameGUI extends JFrame
 
     void setupChatDialog(Friend friend, JFrame frame,Vector<String> pendingMessages)
     {
+        this.friend = friend;
+
         JEditorPane editorPane = new JEditorPane();
         editorPane.setEditable(false);
         editorPane.setContentType("text/html");
@@ -371,6 +365,8 @@ class MainFrameGUI extends JFrame
         chatDialog.setVisible(true);
 
 
+        chatDialog.addWindowListener(this);
+
         chatDialogs.put(friend.getName(), chatDialog);   //add the chatdialog to the hashmap
 
     
@@ -399,7 +395,7 @@ class MainFrameGUI extends JFrame
 
     MyChatDialog findChatDialog(String userID) 
     {
-        return chatDialogs.get(userID);
+        return chatDialogs.get(userID);   //return the chatdialog from the hashmap
     }
 
     void addTextToChatPane(JDialog chatDialog, JEditorPane editorPane, String txt, boolean isSender) 
@@ -412,8 +408,8 @@ class MainFrameGUI extends JFrame
         html = doc.getRootElements()[0];
         body = html.getElement(1);
     
-        String alignment = isSender ? "left" : "right";
-        String color = isSender ? "blue" : "red";
+        String alignment = isSender ? "left" : "right";  //if the message is from me then align left else align right
+        String color = isSender ? "blue" : "red";        //if the message is from me then color blue else color red
     
         String htmlText = "<div align=\"" + alignment + "\">" +
                 "<font color=\"" + color + "\">" +
@@ -422,8 +418,8 @@ class MainFrameGUI extends JFrame
     
         try 
         {
-            doc.insertBeforeEnd(body, htmlText);
-            editorPane.setCaretPosition(editorPane.getDocument().getLength());
+            doc.insertBeforeEnd(body, htmlText);           //insert the text into the html document
+            editorPane.setCaretPosition(editorPane.getDocument().getLength()); //set the caret position to the end of the document
         } 
         catch (Exception e) 
         {
@@ -446,7 +442,9 @@ class MainFrameGUI extends JFrame
         String ip = fieldForIP.getText();                       //get values from text fields
         String portNumber = fieldForPortNumber.getText();
         String username = fieldForUserName.getText();
+        username = username.toLowerCase();                  //convert username to lowercase to avoid case sensitivity
         String password = fieldForPassword.getText();
+        password = password.toLowerCase();
 
         String message = "register " + username + " " + password;     //create a message to send to the server
 
@@ -663,6 +661,58 @@ class MainFrameGUI extends JFrame
     {
         // TODO Auto-generated method stub
        // throw new UnsupportedOperationException("Unimplemented method 'mouseExited'");
+    }
+
+    @Override
+    public void windowOpened(WindowEvent e) {
+        // TODO Auto-generated method stub
+     //   throw new UnsupportedOperationException("Unimplemented method 'windowOpened'");
+    }
+
+    @Override
+    public void windowClosing(WindowEvent e) 
+    {
+        if (e.getSource() instanceof MyChatDialog) 
+        {
+            MyChatDialog chatDialog = (MyChatDialog) e.getSource();
+            Friend friend = chatDialog.getFriend();
+            chatDialogs.remove(friend.getName());
+        } 
+        else if (e.getSource() == this) 
+        {
+            handleLogout();
+            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        }
+    }
+
+    @Override
+    public void windowClosed(WindowEvent e) {
+        // TODO Auto-generated method stub
+      //  throw new UnsupportedOperationException("Unimplemented method 'windowClosed'");
+    }
+
+    @Override
+    public void windowIconified(WindowEvent e) {
+        // TODO Auto-generated method stub
+      //  throw new UnsupportedOperationException("Unimplemented method 'windowIconified'");
+    }
+
+    @Override
+    public void windowDeiconified(WindowEvent e) {
+        // TODO Auto-generated method stub
+     //   throw new UnsupportedOperationException("Unimplemented method 'windowDeiconified'");
+    }
+
+    @Override
+    public void windowActivated(WindowEvent e) {
+        // TODO Auto-generated method stub
+      //  throw new UnsupportedOperationException("Unimplemented method 'windowActivated'");
+    }
+
+    @Override
+    public void windowDeactivated(WindowEvent e) {
+        // TODO Auto-generated method stub
+      //  throw new UnsupportedOperationException("Unimplemented method 'windowDeactivated'");
     }
     
 }

@@ -36,8 +36,7 @@ class ConnectionToClient implements Runnable
    // String userName = null;
     if (user != null)
     {
-      //  userName = user.userName;
-        user.loggedIn = false; // Set loggedIn to false
+        user.loggedIn = false;                                  // Set loggedIn to false
         user.connection = null;
 
         for (String buddy : user.buddylist) 
