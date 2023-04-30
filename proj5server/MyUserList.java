@@ -20,25 +20,21 @@ public class MyUserList  extends Hashtable<String, User>
     void save(DataOutputStream store) throws IOException 
     {
         store.writeInt(size());
-      //  System.out.println("Saving user list...");
-        for (User user : values()) 
+        for (User user : values())      // for each user in the hashtable
         {
-            user.store(store);
+            user.store(store);            // store the user
         }
-      //  System.out.println("User list saved.");
     }
 
     void load(DataInputStream load) throws IOException 
     {
-        int size = load.readInt();
-      //  System.out.println("Loading user list...");
+        int size = load.readInt();                              // read the number of users in the file
         for (int i = 0; i < size; i++) 
         {
-            User user = new User("", "");
-            user.load(load);
-            put(user.userName, user);
+            User user = new User("", "");       // create a new user
+            user.load(load);                                    // load the user
+            put(user.userName, user);                           // add the user to the hashtable
         }
-     //   System.out.println("User list loaded: " + this);
     }
 
     boolean isUsernameInUse(String username) 

@@ -7,7 +7,7 @@ public class MyListModel extends DefaultListModel<Friend>
         super();
     }
 
-    void updateFriend(Friend friend) 
+    void updateIcon(Friend friend) 
     {
         int index = this.indexOf(friend);         //index of friend in list       
         if (index >= 0)                           //if friend is in the list otherwise it will be -1

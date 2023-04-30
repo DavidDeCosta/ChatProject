@@ -52,47 +52,24 @@ public class User
     {
         store.writeUTF(userName);
         store.writeUTF(password);
-        store.writeInt(buddylist.size());
-    //    System.out.println("Storing buddy list for " + userName + ": " + buddylist);
-        for (String buddyUserName : buddylist) {
-            store.writeUTF(buddyUserName);
+        store.writeInt(buddylist.size());      
+        for (String buddyUserName : buddylist) // for each buddy in the buddylist
+        {
+            store.writeUTF(buddyUserName);     // store the buddy's username
         }
     }
 
-    void load(DataInputStream load) throws IOException {
+    void load(DataInputStream load) throws IOException 
+    {
         userName = load.readUTF();
         password = load.readUTF();
-        int buddyListSize = load.readInt();
-     //   System.out.println("Loading buddy list for " + userName);
-        for (int i = 0; i < buddyListSize; i++) {
-            String buddyUserName = load.readUTF();
-            buddylist.add(buddyUserName);
-        }
-      //  System.out.println("Loaded buddy list for " + userName + ": " + buddylist);
-    }
-
-    void saveBuddyList(MyUserList userList) 
-    {
-        try 
+        int buddyListSize = load.readInt();           // read the number of buddies in the file
+        for (int i = 0; i < buddyListSize; i++) 
         {
-            DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.txt"));
-            userList.save(save);
-        } catch (IOException e) 
-        {
-            System.out.println("Error saving the user list: " + e.getMessage());
+            String buddyUserName = load.readUTF();    // read the buddy's username
+            buddylist.add(buddyUserName);             // add the buddy to the buddylist
         }
     }
-
-
-    
-    void loadBuddyList(MyUserList userList) {
-        try (DataInputStream load = new DataInputStream(new FileInputStream("userList.txt"))) {
-            userList.load(load);
-        } catch (IOException e) {
-            System.out.println("Error loading the user list: " + e.getMessage());
-        }
-    }
-
     
 }
 

@@ -366,7 +366,7 @@ class MainFrameGUI extends JFrame
 
         if (friend.hasPendingMessage) 
         {
-            Vector<String> pendingMessagesForFriend = connectionToServer.getAndClearPendingMessagesForFriend(friend.getName());
+            Vector<String> pendingMessagesForFriend = connectionToServer.getAndClearMessages(friend.getName());
             if (pendingMessagesForFriend != null) 
             {
                 for (String message : pendingMessagesForFriend) 
@@ -375,7 +375,7 @@ class MainFrameGUI extends JFrame
                 }
             }
             friend.setHasPendingMessage(false);
-            justAListModel.updateFriend(friend);
+            justAListModel.updateIcon(friend);
         }
 
         chatDialog.setSize(450, 350);
@@ -448,9 +448,9 @@ class MainFrameGUI extends JFrame
 
     void initializeEditorPane(JEditorPane editorPane) 
     {
-        String initialHtml = "<html><head></head><body></body></html>";
+        String startingHTML = "<html><head></head><body></body></html>";  
         editorPane.setContentType("text/html");
-        editorPane.setText(initialHtml);
+        editorPane.setText(startingHTML);
     }
 
     void handleSubmit()

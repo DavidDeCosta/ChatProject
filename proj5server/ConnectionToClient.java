@@ -51,48 +51,49 @@ class ConnectionToClient implements Runnable
 
     
 
-void handleLogin() throws IOException {
-    user = userList.get(clientID);     //returns the user that logs in
-    if (user != null && user.password.equals(clientPassword))  //as long as there was a user and the password matched
+    void handleLogin() throws IOException 
     {
-        if (!user.isLoggedIn())  //also makes sure they arent already logged in
+        user = userList.get(clientID);     //returns the user that logs in
+        if (user != null && user.password.equals(clientPassword))  //as long as there was a user and the password matched
         {
-            user.connection = this;                    //set the users connection to this instance             
-            talker = new Talker(clientSocket, user);
-            talker.sendMessage("login success");   //let the user know the login was successful
-            
-            for (String buddy : user.buddylist)   //display that users buddy list, also send the client its buddys names
+            if (!user.isLoggedIn())  //also makes sure they arent already logged in
             {
-                talker.sendMessage("addFriendSuccess " + buddy + " " + clientID);
+                user.connection = this;                    //set the users connection to this instance             
+                talker = new Talker(clientSocket, user);
+                talker.sendMessage("login success");   //let the user know the login was successful
             
-                User buddyUser = userList.get(buddy);   //get your friends User class
-                if (buddyUser != null) {
-                    if (buddyUser.isLoggedIn())   //if the friend of you exists and are online use their talker to tell them your online
+                for (String buddy : user.buddylist)   //display that users buddy list, also send the client its buddys names
+                {
+                    talker.sendMessage("addFriendSuccess " + buddy + " " + clientID);
+            
+                    User buddyUser = userList.get(buddy);   //get your friends User class
+                    if (buddyUser != null) 
                     {
-                        buddyUser.connection.talker.sendMessage("onlineStatus " + clientID + " " + buddy);
-                        talker.sendMessage("onlineStatus " + buddy + " " + clientID); // Send onlineStatus to the user for each online friend
+                        if (buddyUser.isLoggedIn())   //if the friend of you exists and are online use their talker to tell them your online
+                        {
+                            buddyUser.connection.talker.sendMessage("onlineStatus " + clientID + " " + buddy);
+                            talker.sendMessage("onlineStatus " + buddy + " " + clientID); // Send onlineStatus to the user for each online friend
+                        }
                     }
                 }
-            }
-            user.loggedIn = true;
-            for (String pendingMessage : user.getPendingMessages()) 
+                user.loggedIn = true;
+                for (String pendingMessage : user.getPendingMessages()) 
+                {
+                    talker.sendMessage("pendingMessage " + pendingMessage);
+                }
+                user.clearPendingMessages();
+            } 
+            else 
             {
-                talker.sendMessage("pendingMessage " + pendingMessage);
+                talker.sendMessage("already logged in");
             }
-            user.clearPendingMessages();
         } 
         else 
         {
-            talker.sendMessage("already logged in");
+            System.out.println("Login failed");
+            talker.sendMessage("login failed");
         }
-    } 
-    else 
-    {
-        System.out.println("Login failed");
-        talker.sendMessage("login failed");
     }
-}
-
 
     void handleRegister() throws IOException
     {
@@ -121,7 +122,6 @@ void handleLogin() throws IOException {
             user.buddylist.add(recieverID);  // add friend to buddylist with the key being the username and the value being the User object
             potentialUser = userList.get(recieverID); // get the User object of the potential friend
             potentialUser.buddylist.add(user.userName); // add the user to the potential friend's buddylist   so now both users have each other in their buddylist
-
             
             potentialUser.connection.talker.sendMessage("addFriendSuccess " + user.userName + " " + recieverID); // send  command to the initiator
 
@@ -137,90 +137,90 @@ void handleLogin() throws IOException {
         else
         {
             potentialUser = userList.get(potentialFriend); // get the User object of the potential friend
-
         }
-}
+    }
     
 
-void handleAddFriend() throws IOException
-{
-    potentialFriend = friendUserName; // Potential friend has the friend's username; if person A is trying to add person B
-    if(userList.isUsernameInUse(potentialFriend)) // As long as person B is a registered User, try to add them
+    void handleAddFriend() throws IOException
     {
-        User potentialFriendUser = userList.get(potentialFriend); // Get the User object of the potential friend
-        potentialFriendUser.initiatorUserName = user.userName; // Set the initiatorUserName
-        if (potentialFriendUser.isLoggedIn()) {
-            potentialFriendUser.connection.talker.sendMessage("addfriend " + user.userName + " " + potentialFriend); // Use person B's talker to ask B if they want to add A
-        } else {
-            // If person B is offline, store the friend request in their pending messages
-            String friendRequestMessage = "addfriend " + user.userName + " " + potentialFriend;
-            if (potentialFriendUser.pendingMessages == null) 
+        potentialFriend = friendUserName; // Potential friend has the friend's username; if person A is trying to add person B
+        if(userList.isUsernameInUse(potentialFriend)) // As long as person B is a registered User, try to add them
+        {
+            User potentialFriendUser = userList.get(potentialFriend); // get the user object of the potential friend
+            potentialFriendUser.initiatorUserName = user.userName; 
+            if (potentialFriendUser.isLoggedIn()) 
             {
-                potentialFriendUser.pendingMessages = new Vector<String>();
+                potentialFriendUser.connection.talker.sendMessage("addfriend " + user.userName + " " + potentialFriend); // Use person B's talker to ask B if they want to add A
+            } 
+            else 
+            {
+                String friendRequestMessage = "addfriend " + user.userName + " " + potentialFriend;
+                if (potentialFriendUser.pendingMessages == null)     // if potential friend is offline add the message to their pending messages
+                {
+                    potentialFriendUser.pendingMessages = new Vector<String>();   // make new pending messages list
+                }
+            potentialFriendUser.pendingMessages.add(friendRequestMessage);            // add the message to list
             }
-            potentialFriendUser.pendingMessages.add(friendRequestMessage);
+        }
+        else
+        {
+            System.out.println("i shouldnt be here \n");
         }
     }
-    else
-    {
-        System.out.println("i shouldnt be here \n");
-    }
-}
 
-void handleSendMessage(String receiverID, String messageText) throws IOException 
-{
-    User receiverUser = userList.get(receiverID);
-    if (receiverUser != null) 
+    void handleSendMessage(String receiverID, String messageText) throws IOException 
     {
-        if (receiverUser.isLoggedIn()) 
+        User receiverUser = userList.get(receiverID);
+        if (receiverUser != null) 
         {
-            receiverUser.connection.talker.sendMessage("message " + user.userName + " " + messageText);
+            if (receiverUser.isLoggedIn()) 
+            {
+                receiverUser.connection.talker.sendMessage("message " + user.userName + " " + messageText);
+            } 
+            else 
+            {
+                receiverUser.addPendingMessage("message " + user.userName + " " + messageText); // Add the message as a pending message for the offline user
+            }
         } 
         else 
         {
-            // Add the message as a pending message for the offline user
-            receiverUser.addPendingMessage("message " + user.userName + " " + messageText);
+            System.out.println("Failed to send message to " + receiverID);
         }
-    } 
-    else 
-    {
-        System.out.println("Failed to send message to " + receiverID);
     }
-}
 
-void handleRemoveFriend(String friendToRemove) throws IOException 
-{
-    if (user.buddylist.contains(friendToRemove)) 
+    void handleRemoveFriend(String friendToRemove) throws IOException 
     {
-        user.buddylist.remove(friendToRemove); // Remove friend from the user's buddy list
-        User removedFriend = userList.get(friendToRemove); // Get the User object of the removed friend
-
-        if (removedFriend != null) 
+        if (user.buddylist.contains(friendToRemove)) 
         {
-            removedFriend.buddylist.remove(user.userName); // Remove the user from the removed friend's buddy list
+            user.buddylist.remove(friendToRemove); // Remove friend from the user's buddy list
+            User removedFriend = userList.get(friendToRemove); // Get the User object of the removed friend
 
-            if (removedFriend.isLoggedIn()) 
+            if (removedFriend != null) 
             {
-                // Inform the removed friend that they have been removed
-                removedFriend.connection.talker.sendMessage("friendRemoved " + user.userName);
-            }
+                removedFriend.buddylist.remove(user.userName); // Remove the user from the removed friend's buddy list
 
-            try 
-            {
-                DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.txt"));
-                userList.save(save);
-            } 
-            catch (IOException e) 
-            {
-                System.out.println("Error saving the user list: " + e.getMessage());
+                if (removedFriend.isLoggedIn()) 
+                {
+                
+                    removedFriend.connection.talker.sendMessage("friendRemoved " + user.userName); //tell the removed friend they were removed
+                }
+
+                try 
+                {
+                    DataOutputStream save = new DataOutputStream(new FileOutputStream("userList.txt"));
+                    userList.save(save);    //update the userlist file after removing the friend
+                } 
+                catch (IOException e) 
+                {
+                    System.out.println("Error saving the user list: " + e.getMessage());
+                }
             }
+        } 
+        else 
+        {
+            System.out.println("Friend not found in the buddy list");
         }
-    } 
-    else 
-    {
-        System.out.println("Friend not found in the buddy list");
     }
-}
 
     @Override
     public void run() 

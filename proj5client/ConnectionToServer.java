@@ -11,7 +11,6 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
 {
     String message;
     Socket normalSocket;        // socket used to communicate with client
-    //boolean recieved = false;   
     Talker talker;
     String recievedMessage;
     String [] information;
@@ -26,9 +25,6 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
 
     HashMap<String, Vector<String>> pendingMessages = new HashMap<String, Vector<String>>();
 
-  //  Vector<Friend> friends = new Vector<>();
-
-
     ConnectionToServer(Socket normalSocket, String message,String userID, MainFrameGUI mainFrameGUI) throws IOException
     {
         this.normalSocket = normalSocket;
@@ -41,13 +37,13 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
 
 
     
-    Vector<String> getAndClearPendingMessagesForFriend(String friendName) 
+    Vector<String> getAndClearMessages(String friendName) 
     {
-        Vector<String> pendingMessagesForFriend = pendingMessages.get(friendName);
-        if (pendingMessagesForFriend != null) 
+        Vector<String> pendingMessagesForFriend = pendingMessages.get(friendName);  //trys to get the pending messages for this friend
+        if (pendingMessagesForFriend != null)                                       //if there are pending messages for this friend
         {
-            pendingMessages.put(friendName, new Vector<String>()); // clear the pending messages for this friend by replacing it with a new empty vector
-            return pendingMessagesForFriend;
+            pendingMessages.put(friendName, new Vector<String>());                 //clear the pending messages for this friend in the hashmap
+            return pendingMessagesForFriend;                                       //pendingMessagesForFriend still contains the pending messages for this friend
         }
         return null;
     }
@@ -103,10 +99,10 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                         if (friend != null) 
                         {
                             friend.setHasPendingMessage(true);
-                            mainFrameGUI.justAListModel.updateFriend(friend);                       // update the friend in the list
+                            mainFrameGUI.justAListModel.updateIcon(friend);                         //show the pending icon
         
-                            Vector<String> pendingMessagesForFriend = pendingMessages.get(sender);  // get the pending messages for this friend
-                            if (pendingMessagesForFriend == null)                                   // if there are no pending messages for this friend
+                            Vector<String> pendingMessagesForFriend = pendingMessages.get(sender);  // get the pending messages
+                            if (pendingMessagesForFriend == null)                                   // if there are no pending messages
                             {
                                 pendingMessagesForFriend = new Vector<String>();                    // create a new vector to hold the pending messages
                                 pendingMessages.put(sender, pendingMessagesForFriend);              // add the vector to the hashmap
@@ -146,8 +142,8 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                     String[] parts = recievedMessage.split(" ");
                     String friendName = parts[1];
 
-                    // Create a Friend object and add it to the justAListModel
-                    Friend newFriend = new Friend(friendName);
+
+                    Friend newFriend = new Friend(friendName);                       // Create a Friend object and add it to the justAListModel
                     mainFrameGUI.justAListModel.addElement(newFriend);
 
                     command = "";
@@ -219,8 +215,8 @@ class ConnectionToServer implements Runnable  // this class is used to create a 
                                 Friend friend = mainFrameGUI.justAListModel.getFriend(sender);   // get the friend object from the list
                                 if(friend != null)
                                 {
-                                    friend.setHasPendingMessage(true);          // set the hasPendingMessage to true
-                                    mainFrameGUI.justAListModel.updateFriend(friend);             // show the message icon 
+                                    friend.setHasPendingMessage(true);                      // set the hasPendingMessage to true
+                                    mainFrameGUI.justAListModel.updateIcon(friend);                             // show the message icon 
                                     Vector<String> pendingMessagesForFriend = pendingMessages.get(sender);   // get the pending messages for this friend
                                     if(pendingMessagesForFriend == null)
                                     {
