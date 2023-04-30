@@ -43,6 +43,7 @@ class MainFrameGUI extends JFrame
     JButton submit;
     JButton cancel;
     JButton addFriend;
+    JButton logOut;
 
     JComponent panel;
     GroupLayout groupLayout;
@@ -87,7 +88,7 @@ class MainFrameGUI extends JFrame
         setSize(400,500);           
         setLocationRelativeTo(null);                                           // window is placed in the center of screen
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);                          //when close frame the program stops
-        setTitle("Project 4");
+        setTitle("Project 5");
         setVisible(true);
 
         addWindowListener(this);  // to send logout message to server when window is closed
@@ -199,26 +200,42 @@ class MainFrameGUI extends JFrame
 
         addFriend = new JButton("Add Friend");
         addFriend.addActionListener(this);
+        addFriend.setVisible(false);  //false until user logs in
+
+        logOut = new JButton("Logout");
+        logOut.addActionListener(this);
+        logOut.setVisible(false);  //false until user logs in
+
 
         logIn = new JButton("Login");
         logIn.addActionListener(this);
         panel2 = new JPanel();
         add(panel2, BorderLayout.NORTH);
 
+
+        
+
         panel2.add(register);
         panel2.add(logIn);
         panel2.add(addFriend);
+        panel2.add(logOut);
+
 
     }
 
     void handleLogout()
     {
+        logIn.setEnabled(true);
+        addFriend.setVisible(false);
+        justAListModel.clear();
+        logOut.setVisible(false);
+        setTitle("Project 5");
+
         if (talker != null) 
         {
             try 
             {
                 talker.sendMessage("logout"); // Send a logout message to the server
-                //    talker.close(); // Close the socket connection
             } 
             catch (IOException e) 
             {
@@ -232,7 +249,9 @@ class MainFrameGUI extends JFrame
         String ip = fieldForIP.getText();
         int portNumber = Integer.parseInt(fieldForPortNumber.getText());
         userID = fieldForUserName.getText();
+        userID = userID.toLowerCase();
         String password = fieldForPassword.getText();
+        password = password.toLowerCase();
 
         String message = "login " + userID + " " + password;                   // create the message to send to the server
    
@@ -434,7 +453,6 @@ class MainFrameGUI extends JFrame
         editorPane.setText(initialHtml);
     }
 
-
     void handleSubmit()
     {
         properties = new Properties();
@@ -486,13 +504,13 @@ class MainFrameGUI extends JFrame
 
     void handleLogin()
     {
-        dialogSetup(true);
+        dialogSetup(true);       //true because we are logging in
 
     }
 
     void handleRegister()
     {
-        dialogSetup(false);
+        dialogSetup(false);   //false because we are registering
     }
 
     void handleAddFriend()
@@ -531,23 +549,22 @@ class MainFrameGUI extends JFrame
     JPopupMenu createContextMenu() 
     {
         JPopupMenu contextMenu = new JPopupMenu();
-        JMenuItem removeFriendMenuItem = new JMenuItem("Remove Friend");
-        removeFriendMenuItem.addActionListener(this);
-        removeFriendMenuItem.setActionCommand("removeFriend");
-        contextMenu.add(removeFriendMenuItem);
+        JMenuItem removeFriend = new JMenuItem("Remove Friend");    //create a menu item
+        removeFriend.addActionListener(this);
+        removeFriend.setActionCommand("removeFriend");  //set the action command to removeFriend
+        contextMenu.add(removeFriend);                                //add to the context menu
         return contextMenu;
     }
 
     void handleRemoveFriend() 
     {
-        int selectedIndex = displayList.getSelectedIndex();
+        int selectedIndex = displayList.getSelectedIndex();       //get the index of the selected friend
         if (selectedIndex >= 0) 
         {
-            Friend friend = justAListModel.getElementAt(selectedIndex);
+            Friend friend = justAListModel.getElementAt(selectedIndex);           //get the friend object from the list
             String friendName = friend.getName();
     
-            // Send a message to the server to remove the friend from the buddy list
-            String message = "removefriend " + friendName;
+            String message = "removefriend " + friendName;                       //send message to server to remove friend
             try 
             {
                 talker.sendMessage(message);
@@ -558,7 +575,7 @@ class MainFrameGUI extends JFrame
             }
     
             // Remove the friend from the JList
-            justAListModel.removeElementAt(selectedIndex);
+            justAListModel.removeElementAt(selectedIndex);                       //remove the friend from the list
         }
     }
 
@@ -602,6 +619,10 @@ class MainFrameGUI extends JFrame
             handleRemoveFriend();
             System.out.println("i removed the friend \n");
         }
+        else if(e.getActionCommand().equals("Logout"))
+        {
+            handleLogout();
+        }
     }
 
     @Override
@@ -611,15 +632,14 @@ class MainFrameGUI extends JFrame
         {
             int index = displayList.locationToIndex(e.getPoint());          //get the index of the item that was clicked
             Friend friend = (Friend) justAListModel.getElementAt(index);     //get the friend object at that index
-
-            // Check if a chat dialog is already open for the friend
-            if (!chatDialogs.containsKey(friend.getName())) 
+            
+            if (!chatDialogs.containsKey(friend.getName()))                  // Check if a chat dialog is already open for the friend
             {
-            Vector<String> pendingMessagesForFriend = pendingMessages.get(friend.getName());
+            Vector<String> pendingMessagesForFriend = pendingMessages.get(friend.getName());            //get the pending messages for the friend
             setupChatDialog(friend, this, pendingMessagesForFriend);                                   //create a new chat dialog for the friend
                 if (pendingMessagesForFriend != null) 
                 {
-                pendingMessagesForFriend.clear();
+                    pendingMessagesForFriend.clear();                                //clear the pending messages because they have been read
                 }
             }
         }
@@ -628,9 +648,9 @@ class MainFrameGUI extends JFrame
             int index = displayList.locationToIndex(e.getPoint());
             if (index >= 0) 
             {
-                displayList.setSelectedIndex(index);
-                JPopupMenu contextMenu = createContextMenu();
-                contextMenu.show(displayList, e.getX(), e.getY());
+                displayList.setSelectedIndex(index);                         //select the item that was right clicked
+                JPopupMenu contextMenu = createContextMenu();                //create the context menu
+                contextMenu.show(displayList, e.getX(), e.getY());           //show the context menu
             }
         }
     }
@@ -674,9 +694,9 @@ class MainFrameGUI extends JFrame
     {
         if (e.getSource() instanceof MyChatDialog) 
         {
-            MyChatDialog chatDialog = (MyChatDialog) e.getSource();
-            Friend friend = chatDialog.getFriend();
-            chatDialogs.remove(friend.getName());
+            MyChatDialog chatDialog = (MyChatDialog) e.getSource();        //get the chat dialog that was closed
+            Friend friend = chatDialog.getFriend();                        //get the friend object from the chat dialog
+            chatDialogs.remove(friend.getName());                          //remove the chat dialog from the map
         } 
         else if (e.getSource() == this) 
         {

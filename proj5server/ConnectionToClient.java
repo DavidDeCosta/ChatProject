@@ -20,7 +20,6 @@ class ConnectionToClient implements Runnable
     String friendUserName;
     MyUserList userList;
     String potentialFriend;
-  //  String initiatorUserName;
 
     ConnectionToClient(Socket clientSocket, MyUserList userList) throws IOException 
     {
@@ -32,24 +31,23 @@ class ConnectionToClient implements Runnable
     }
 
     void handleLogout() throws IOException 
-{
-   // String userName = null;
-    if (user != null)
     {
-        user.loggedIn = false;                                  // Set loggedIn to false
-        user.connection = null;
-
-        for (String buddy : user.buddylist) 
+        if (user != null)
         {
-            User buddyUser = userList.get(buddy); // gets his buddy's User class
-            if (buddyUser != null && buddyUser.isLoggedIn()) // as long as that person exists and is online, send them the message
+            user.loggedIn = false;                                  // Set loggedIn to false
+            user.connection = null;
+
+            for (String buddy : user.buddylist) 
             {
-                buddyUser.connection.talker.sendMessage("friendLogout " + user.userName); // if person A logs out, user.userName is person A
+                User buddyUser = userList.get(buddy); // gets his buddy's User class
+                if (buddyUser != null && buddyUser.isLoggedIn()) // as long as that person exists and is online, send them the message
+                {
+                    buddyUser.connection.talker.sendMessage("friendLogout " + user.userName); // if person A logs out, user.userName is person A
+                }
             }
+            user = null;               // Reset the user and talker objects
         }
-        user = null; // Reset the user and talker objects
     }
-}
 
     
 
